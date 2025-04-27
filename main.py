@@ -1,4 +1,7 @@
 from pyxel import *
+import socket
+import json
+import threading
 
 # Janela
 init(160, 120)
@@ -64,6 +67,100 @@ class Camera:
         self.x = target.x - self.width // 2 + PLAYER_SPRITE_WIDTH // 2
         self.y = target.y - self.height // 2 + PLAYER_SPRITE_HEIGHT // 2
 
+class Client:
+    def __init__(self, server_ip, server_port):
+        self.server_ip = server_ip
+        self.server_port = server_port
+
+        self.socket = None
+        self.id = None # usado para armazenar o endereço do cliente e deferenciar dos outros jogadores
+
+        self.running = False
+
+    def start(self):
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+            self.socket.sendto(json.dumps({
+                'type': 'connect',
+                'data': game_state.character_color
+            }).encode(), (self.server_ip, self.server_port))
+
+            self.running = True
+
+            while self.running:
+                data, _ = self.socket.recvfrom(1024)
+
+                if data:
+                    message = json.loads(data.decode())
+                    
+                    if message['type'] == 'connect':
+                        self.id = message['data']
+                        
+                        self.socket.sendto(json.dumps({
+                            'type': 'connected'
+                        }).encode(), (self.server_ip, self.server_port))
+
+                    elif message['type'] == 'player_list':
+                        data = message['data']
+
+                        for id, addr, color in data:
+                            if id != self.id:
+                                player = PlayerOnline(WIDTH // 2, HEIGHT // 2, color, id)
+                                players_online.append(player)
+                                print(f"Jogador online conectado: {addr} com ID {id} e cor {color}")
+                    
+                    elif message['type'] == 'server_shutdown':
+                        print("Servidor desligado.")
+                        break
+                    
+                    elif message['type'] == 'move':
+                        id = message['id']
+                        data = message['data']
+                        
+                        for player in players_online:
+                            if player.id == id:
+                                player.update(data['x'], data['y'], data['color'], data['andando'], data['level'], data['facing_right'])
+                                break
+                            
+
+        except Exception as e:
+            print(f"Erro no cliente: {e}")
+        
+        finally:
+            self.stop()
+
+    def stop(self):
+        self.running = False
+
+        if self.socket:
+            self.socket.close()
+
+        self.socket = None
+
+    def send_position(self, x, y, color, andando, level, facing_right):
+        if self.socket and self.running:
+            
+            self.socket.sendto(json.dumps({
+                'type': 'move',
+                'id': self.id,
+                'data': {
+                    'x': x,
+                    'y': y,
+                    'color': color,
+                    'andando': andando,
+                    'level': level,
+                    'facing_right': facing_right
+                }
+            }).encode(), (self.server_ip, self.server_port))
+    
+    def send_disconnect(self):
+        if self.socket and self.running:
+            self.socket.sendto(json.dumps({
+                'type': 'disconnect',
+                'id': self.id
+            }).encode(), (self.server_ip, self.server_port))
+
 class Player:
     def __init__(self, x: int, y: int, color: int):
         self.x = x
@@ -79,7 +176,9 @@ class Player:
         self.width = PLAYER_SPRITE_WIDTH
         self.height = PLAYER_SPRITE_HEIGHT
 
-    def update(self, platforms, itens):
+        self.level = None  # Atributo para armazenar o nível atual
+
+    def update(self, platforms, itens, players_online):
         self.andando = False
 
         # Gravidade
@@ -104,6 +203,13 @@ class Player:
                         break
             if not did_collide_with_floor:
                 self.on_floor = False
+            
+            for player in players_online:
+                if collision_detect(self, player):
+                    self.on_floor = True
+                    did_collide_with_floor = True
+                    self.y = previous_y
+                    break
 
         # Verifica se caiu abaixo da tela
         if self.y >= HEIGHT:
@@ -151,6 +257,13 @@ class Player:
                     if item.id == "caixa2" and collision_detect(self, item):
                         self.x = previous_x
                         break
+                
+                # verifica colisão com outros jogadores
+                for player in players_online:
+                    if collision_detect(self, player):
+                        self.x = previous_x
+                        break
+
 
         if btn(KEY_RIGHT):
             self.andando = True
@@ -189,6 +302,12 @@ class Player:
                     if item.id == "caixa2" and collision_detect(self, item):
                         self.x = previous_x
                         break
+                
+                # verifica colisão com outros jogadores
+                for player in players_online:
+                    if collision_detect(self, player):
+                        self.x = previous_x
+                        break
 
         # Aplicar velocidade de pulo
         if self.upward_speed > 0:
@@ -207,6 +326,99 @@ class Player:
                         break
             self.upward_speed -= 1
 
+    def respawn(self):
+        self.x = self.respawn_x
+        self.y = self.respawn_y
+        self.upward_speed = 0
+        self.on_floor = False
+        if game_state.esta_level1_1 and level1_1:
+            for item in level1_1.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level1_2 and level1_2:
+            for item in level1_2.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level1_3 and level1_3:
+            for item in level1_3.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level2_1 and level2_1:
+            for item in level2_1.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level2_2 and level2_2:
+            for item in level2_2.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level2_3 and level2_3:
+            for item in level2_3.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+
+    def draw(self, camera):
+        screen_x = self.x - camera.x
+        screen_y = self.y - camera.y
+        sprite_width = PLAYER_SPRITE_WIDTH if not self.facing_right else -PLAYER_SPRITE_WIDTH  # Flip sprite if facing right
+        
+        if self.color == 1:
+            if self.andando:
+                blt(screen_x, screen_y, 0, 16, 0, sprite_width, PLAYER_SPRITE_HEIGHT, 4)
+            else:
+                blt(screen_x, screen_y, 0, 0, 0, sprite_width, PLAYER_SPRITE_HEIGHT, 4)
+        elif self.color == 2:
+            if self.andando:
+                blt(screen_x, screen_y, 0, 16, 16, sprite_width, PLAYER_SPRITE_HEIGHT, 4)
+            else:
+                blt(screen_x, screen_y, 0, 0, 16, sprite_width, PLAYER_SPRITE_HEIGHT, 4)
+        elif self.color == 3:
+            if self.andando:
+                blt(screen_x, screen_y, 0, 16, 32, sprite_width, PLAYER_SPRITE_HEIGHT, 4)
+            else:
+                blt(screen_x, screen_y, 0, 0, 32, sprite_width, PLAYER_SPRITE_HEIGHT, 4)
+        elif self.color == 4:
+            if self.andando:
+                blt(screen_x, screen_y, 0, 16, 48, sprite_width, PLAYER_SPRITE_HEIGHT, 4)
+            else:
+                blt(screen_x, screen_y, 0, 0, 48, sprite_width, PLAYER_SPRITE_HEIGHT, 4)
+
+class PlayerOnline:
+    def __init__(self, x, y, color, id):
+        self.id = id
+        self.x = x
+        self.y = y
+        self.color = color
+        self.speed = PLAYER_SPEED
+        self.on_floor = False
+        self.upward_speed = 0
+        self.andando = False
+        self.respawn_x = x
+        self.respawn_y = y
+        self.facing_right = False  # New attribute to track facing direction
+        self.width = PLAYER_SPRITE_WIDTH
+        self.height = PLAYER_SPRITE_HEIGHT
+        self.level = None
+
+    def update(self, x, y, color, andando, level, facing_right):
+        self.x = x
+        self.y = y
+        self.color = color
+        self.andando = andando
+        self.level = level
+        self.facing_right = facing_right  # Update facing direction
+        
     def respawn(self):
         self.x = self.respawn_x
         self.y = self.respawn_y
@@ -1010,8 +1222,21 @@ def collision_detect(a, b):
         a.x > b.x + b.width - 1
     )
 
+# conexao com o servidor
+server_ip = input("Digite o endereço do servidor: ")
+server_ip = server_ip if server_ip else "192.168.1.17"
+
+server_port = input("Digite a porta do servidor: ")
+server_port = int(server_port) if server_port else 12345
+
 # Inicialização
 player = Player(WIDTH // 2, HEIGHT // 2, 1)
+client = Client(server_ip, server_port)
+client_thread = threading.Thread(target=client.start, daemon=True)
+client_thread.start()
+
+players_online = []
+
 level1_1 = None
 level1_2 = None
 level1_3 = None
@@ -1034,11 +1259,14 @@ def update():
             load("levels.pyxres")
             game_state.esta_menu = False
             game_state.esta_levels = True
+            player.level = None
         if game_state.option_menu == 3 and btnp(KEY_SPACE):
             load("Change_character.pyxres")
             game_state.esta_menu = False
             game_state.esta_choose_character = True
+            player.level = None
         if game_state.option_menu == 4 and btnp(KEY_SPACE):
+            client.send_disconnect()
             quit()
 
     if game_state.esta_choose_character:
@@ -1061,6 +1289,7 @@ def update():
             game_state.option_menu = 1
             game_state.pode_selecionar = False
             game_state.x_seta1 = 42
+            player.level = None
 
         if game_state.pode_selecionar and btnp(KEY_B):
             load("Intro.pyxres")
@@ -1069,6 +1298,7 @@ def update():
             game_state.option_menu = 1
             game_state.pode_selecionar = False
             game_state.x_seta1 = 42
+            player.level = None
 
     if game_state.esta_levels:
         if btnp(KEY_RIGHT) and game_state.option_level < 2:
@@ -1086,6 +1316,7 @@ def update():
             game_state.esta_levels = False
             game_state.esta_levels_hello = True
             game_state.pode_selecionar = False
+            player.level = None
 
         if game_state.pode_selecionar and btnp(KEY_SPACE) and game_state.option_level == 1:
             load("levels_hello_stop.pyxres")
@@ -1093,6 +1324,7 @@ def update():
             game_state.esta_levels_stopmove = True
             game_state.pode_selecionar = False
             game_state.x_seta3 = 42
+            player.level = None
         
         if game_state.pode_selecionar and btnp(KEY_SPACE) and game_state.option_level == 2:
             load("levels_hello_stop.pyxres")
@@ -1100,6 +1332,7 @@ def update():
             game_state.esta_levels_stopmove = True
             game_state.pode_selecionar = False
             game_state.x_seta3 = 42
+            player.level = None
 
         if game_state.pode_selecionar and btnp(KEY_B):
             load("Intro.pyxres")
@@ -1108,6 +1341,7 @@ def update():
             game_state.option_menu = 1
             game_state.pode_selecionar = False
             game_state.x_seta1 = 42
+            player.level = None
 
     # hello momoduo
     if game_state.esta_levels_hello:
@@ -1122,7 +1356,7 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_SPACE):
-            load("Player.pyxres")
+            load("player.pyxres")
             if game_state.option_level_hello == 1:
                 level1_1 = Level1_1()
                 game_state.esta_levels_hello = False
@@ -1130,6 +1364,7 @@ def update():
                 game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level1_1'
             elif game_state.option_level_hello == 2:
                 level1_2 = Level1_2()
                 game_state.esta_levels_hello = False
@@ -1137,6 +1372,7 @@ def update():
                 game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level1_2'
             elif game_state.option_level_hello == 3:
                 level1_3 = Level1_3()
                 game_state.esta_levels_hello = False
@@ -1144,6 +1380,7 @@ def update():
                 game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level1_3'
 
         if game_state.pode_selecionar and btnp(KEY_B):
             load("levels.pyxres")
@@ -1151,11 +1388,12 @@ def update():
             game_state.esta_levels = True
             game_state.option_level = 0
             game_state.pode_selecionar = False
+            player.level = None
 
     if game_state.esta_level1_1:
         if btnp(KEY_R):
             player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
-        player.update(level1_1.platforms, level1_1.itens)
+        player.update(level1_1.platforms, level1_1.itens, players_online)
         level1_1.update(player, game_state)  # Passa player e game_state
 
         if not btn(KEY_SPACE):
@@ -1167,11 +1405,12 @@ def update():
                 game_state.esta_levels_hello = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
+                player.level = None
 
     if game_state.esta_level1_2:
         if btnp(KEY_R):
             player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
-        player.update(level1_2.platforms, level1_2.itens)
+        player.update(level1_2.platforms, level1_2.itens, players_online)
         level1_2.update(player, game_state)  # Passa player e game_state
 
         if not btn(KEY_SPACE):
@@ -1183,11 +1422,12 @@ def update():
                 game_state.esta_levels_hello = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
+                player.level = None
     
     if game_state.esta_level1_3:
         if btnp(KEY_R):
             player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
-        player.update(level1_3.platforms, level1_3.itens)
+        player.update(level1_3.platforms, level1_3.itens, players_online)
         level1_3.update(player, game_state)  # Passa player e game_state
 
         if not btn(KEY_SPACE):
@@ -1199,6 +1439,7 @@ def update():
                 game_state.esta_levels_hello = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
+                player.level = None
 
     # stop and move
     if game_state.esta_levels_stopmove:
@@ -1213,7 +1454,7 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_SPACE):
-            load("Player.pyxres")
+            load("player.pyxres")
             if game_state.option_level_stopmove == 1:
                 level2_1 = Level2_1()
                 game_state.esta_levels_stopmove= False
@@ -1221,6 +1462,7 @@ def update():
                 game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level2_1'
             elif game_state.option_level_stopmove == 2:
                 level2_2 = Level2_2()
                 game_state.esta_levels_stopmove = False
@@ -1228,6 +1470,7 @@ def update():
                 game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level2_2'
             elif game_state.option_level_stopmove == 3:
                 level2_3 = Level2_3()
                 game_state.esta_levels_stopmove = False
@@ -1235,6 +1478,7 @@ def update():
                 game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level2_3'
 
         if game_state.pode_selecionar and btnp(KEY_B):
             load("levels.pyxres")
@@ -1242,11 +1486,12 @@ def update():
             game_state.esta_levels = True
             game_state.option_level = 0
             game_state.pode_selecionar = False
+            player.level = None
 
     if game_state.esta_level2_1:
         if btnp(KEY_R):
             player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
-        player.update(level2_1.platforms, level2_1.itens)
+        player.update(level2_1.platforms, level2_1.itens, players_online)
         level2_1.update(player, game_state)  # Passa player e game_state
 
         if not btn(KEY_SPACE):
@@ -1258,11 +1503,12 @@ def update():
                 game_state.esta_levels_stopmove = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
+                player.level = None
 
     if game_state.esta_level2_2:
         if btnp(KEY_R):
             player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
-        player.update(level2_2.platforms, level2_2.itens)
+        player.update(level2_2.platforms, level2_2.itens, players_online)
         level2_2.update(player, game_state)  # Passa player e game_state
 
         if not btn(KEY_SPACE):
@@ -1274,11 +1520,12 @@ def update():
                 game_state.esta_levels_stopmove = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
+                player.level = None
 
     if game_state.esta_level2_3:
         if btnp(KEY_R):
             player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
-        player.update(level2_3.platforms, level2_3.itens)
+        player.update(level2_3.platforms, level2_3.itens, players_online)
         level2_3.update(player, game_state)  # Passa player e game_state
 
         if not btn(KEY_SPACE):
@@ -1290,6 +1537,12 @@ def update():
                 game_state.esta_levels_stopmove = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
+                player.level = None
+
+    # Manda para o servidor a posição do player
+    if game_state.esta_level1_1 or game_state.esta_level1_2 or game_state.esta_level1_3 or game_state.esta_level2_1 or game_state.esta_level2_2 or game_state.esta_level2_3:
+        client.send_position(player.x, player.y, player.color, player.andando, player.level, player.facing_right)
+
 
 def draw():
     cls(7)
@@ -1331,14 +1584,26 @@ def draw():
     if game_state.esta_level1_1:
         level1_1.draw()
         player.draw(level1_1.camera)
+
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level1_1.camera)
     
     if game_state.esta_level1_2:
         level1_2.draw()
         player.draw(level1_2.camera)
 
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level1_2.camera)
+
     if game_state.esta_level1_3:
         level1_3.draw()
         player.draw(level1_3.camera)
+
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level1_3.camera)
 
     # stop and move
     if game_state.esta_levels_stopmove:
@@ -1356,14 +1621,26 @@ def draw():
     if game_state.esta_level2_1:
         level2_1.draw()
         player.draw(level2_1.camera)
+
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level2_1.camera)
     
     if game_state.esta_level2_2:
         level2_2.draw()
         player.draw(level2_2.camera)
 
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level2_2.camera)
+
     if game_state.esta_level2_3:
         level2_3.draw()
         player.draw(level2_3.camera)
+
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level2_3.camera)
 
 load("Intro.pyxres")
 run(update, draw)
