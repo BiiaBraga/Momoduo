@@ -80,6 +80,51 @@ class Server:
                                 break
                         else:
                             print(f"Jogador não encontrado: {addr}")
+                    
+                    elif message['type'] == 'level_update':
+                        for jogador in self.jogadores:
+                            if jogador[0] == message['id']:
+                                # Envia a atualização de nível para todos os jogadores
+                                for _, addr_jogador, _ in self.jogadores:
+                                    if addr_jogador != addr:
+                                        self.socket.sendto(json.dumps({
+                                            'type': 'level_update',
+                                            'id': jogador[0],
+                                            'data': message['data']
+                                        }).encode(), addr_jogador)
+                                break
+                        else:
+                            print(f"Jogador não encontrado: {addr}")
+                    
+                    elif message['type'] == 'event_button':
+                        for jogador in self.jogadores:
+                            if jogador[0] == message['id']:
+                                # Envia o evento para todos os jogadores
+                                for _, addr_jogador, _ in self.jogadores:
+                                    if addr_jogador != addr:
+                                        self.socket.sendto(json.dumps({
+                                            'type': 'event_button',
+                                            'id': jogador[0],
+                                            'data': message['data']
+                                        }).encode(), addr_jogador)
+                                break
+                        else:
+                            print(f"Jogador não encontrado: {addr}")
+                    
+                    elif message['type'] == 'event_door':
+                        for jogador in self.jogadores:
+                            if jogador[0] == message['id']:
+                                # Envia o evento para todos os jogadores
+                                for _, addr_jogador, _ in self.jogadores:
+                                    if addr_jogador != addr:
+                                        self.socket.sendto(json.dumps({
+                                            'type': 'event_door',
+                                            'id': jogador[0],
+                                            'data': message['data']
+                                        }).encode(), addr_jogador)
+                                break
+                        else:
+                            print(f"Jogador não encontrado: {addr}")
 
         except KeyboardInterrupt:
             print("Servidor interrompido pelo usuário.")
@@ -107,8 +152,8 @@ class Server:
         print("Servidor parado.")
 
 if __name__ == "__main__":
-    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão 192.168.1.17): ")
-    host = host if host else '192.168.1.17'
+    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão 10.1.40.203): ")
+    host = host if host else '10.1.40.203'
 
     port = input("Digite a porta do servidor (ou pressione Enter para usar o padrão 12345): ")
     port = int(port) if port else 12345

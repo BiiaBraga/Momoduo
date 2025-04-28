@@ -106,7 +106,7 @@ class Client:
 
                         for id, addr, color in data:
                             if id != self.id:
-                                player = PlayerOnline(WIDTH // 2, HEIGHT // 2, color, id)
+                                player = PlayerOnline(-10, -10, color, id)
                                 players_online.append(player)
                                 print(f"Jogador online conectado: {addr} com ID {id} e cor {color}")
                     
@@ -122,7 +122,131 @@ class Client:
                             if player.id == id:
                                 player.update(data['x'], data['y'], data['color'], data['andando'], data['level'], data['facing_right'])
                                 break
-                            
+                    
+                    elif message['type'] == 'disconnect':
+                        id = message['id']
+                        
+                        for player in players_online:
+                            if player.id == id:
+                                players_online.remove(player)
+                                print(f"Jogador desconectado: {id}")
+                                break
+                    
+                    elif message['type'] == 'level_update':
+                        data = message['data']
+
+                        if data['level'] == "level1_1":
+                            for item in level1_1.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                                    break
+                        elif data['level'] == "level1_2":
+                            for item in level1_2.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                                    break
+                        elif data['level'] == "level1_3":
+                            for item in level1_3.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                                    break
+                        elif data['level'] == "level2_1":
+                            for item in level2_1.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                                    break
+                        elif data['level'] == "level2_2":
+                            for item in level2_2.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                                    break
+                        elif data['level'] == "level2_3":
+                            for item in level2_3.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                                    break
+                                
+                    elif message['type'] == 'event_button':
+                        data = message['data']
+                        level = data['level']
+                        button_id = data['button_id']
+                        is_active = data['is_active']
+
+                        if level == "level1_2" and player.level == "level1_2":
+                            for item in level1_2.interactive_itens:
+                                if item.id == button_id:
+                                    item.is_active = is_active
+                                    break
+                        elif level == "level1_3" and player.level == "level1_3":
+                            for item in level1_3.interactive_itens:
+                                if item.id == button_id:
+                                    item.is_active = is_active
+                                    break
+                                
+                    elif message['type'] == 'event_door':
+                        data = message['data']
+                        level = data['level']
+
+                        if level == "level1_1" and player.level == "level1_1":
+                            load("levels_hello_stop.pyxres")
+                            game_state.esta_level1_1 = False
+                            game_state.esta_levels_hello = True
+                            game_state.level_hello_1_achivied = True
+                            game_state.option_level_hello = 1
+                            game_state.x_seta3 = 42
+                            game_state.pode_selecionar = False
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
+                        elif level == "level1_2" and player.level == "level1_2":
+                            load("levels_hello_stop.pyxres")
+                            game_state.esta_level1_2 = False
+                            game_state.esta_levels_hello = True
+                            game_state.level_hello_2_achivied = True
+                            game_state.option_level_hello = 1
+                            game_state.x_seta3 = 42
+                            game_state.pode_selecionar = False
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
+                        elif level == "level1_3" and player.level == "level1_3":
+                            load("levels_hello_stop.pyxres")
+                            game_state.esta_level1_3 = False
+                            game_state.esta_levels_hello = True
+                            game_state.level_hello_3_achivied = True
+                            game_state.option_level_hello = 1
+                            game_state.x_seta3 = 42
+                            game_state.pode_selecionar = False
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
+                        elif level == "level2_1" and player.level == "level2_1":
+                            load("levels_hello_stop.pyxres")
+                            game_state.esta_level2_1 = False
+                            game_state.esta_levels_hello = True
+                            game_state.level_stopmove_1_achivied = True
+                            game_state.option_level_hello = 1
+                            game_state.x_seta3 = 42
+                            game_state.pode_selecionar = False
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
+                        elif level == "level2_2" and player.level == "level2_2":
+                            load("levels_hello_stop.pyxres")
+                            game_state.esta_level2_2 = False
+                            game_state.esta_levels_hello = True
+                            game_state.level_stopmove_2_achivied = True
+                            game_state.option_level_hello = 1
+                            game_state.x_seta3 = 42
+                            game_state.pode_selecionar = False
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
+                        elif level == "level2_3" and player.level == "level2_3":
+                            load("levels_hello_stop.pyxres")
+                            game_state.esta_level2_3 = False
+                            game_state.esta_levels_hello = True
+                            game_state.level_stopmove_3_achivied = True
+                            game_state.option_level_hello = 1
+                            game_state.x_seta3 = 42
+                            game_state.pode_selecionar = False
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
 
         except Exception as e:
             print(f"Erro no cliente: {e}")
@@ -160,6 +284,42 @@ class Client:
                 'type': 'disconnect',
                 'id': self.id
             }).encode(), (self.server_ip, self.server_port))
+    
+    def send_level_update(self, level, item_id, new_x, new_y):
+        if self.socket and self.running:
+            self.socket.sendto(json.dumps({
+                'type': 'level_update',
+                'id': self.id,
+                'data': {
+                    'level': level,
+                    'item_id': item_id,
+                    'new_x': new_x,
+                    'new_y': new_y
+                }
+            }).encode(), (self.server_ip, self.server_port))
+    
+    def send_event_button(self, level, button_id, is_active):
+        if self.socket and self.running:
+            self.socket.sendto(json.dumps({
+                'type': 'event_button',
+                'id': self.id,
+                'data': {
+                    'level': level,
+                    'button_id': button_id,
+                    'is_active': is_active
+                }
+            }).encode(), (self.server_ip, self.server_port))
+    
+    def send_event_door(self, level):
+        if self.socket and self.running:
+            self.socket.sendto(json.dumps({
+                'type': 'event_door',
+                'id': self.id,
+                'data': {
+                    'level': level,
+                }
+            }).encode(), (self.server_ip, self.server_port))
+    
 
 class Player:
     def __init__(self, x: int, y: int, color: int):
@@ -533,6 +693,7 @@ class Item:
         if self.id == "key" and self.collected:
             self.x = player.x + PLAYER_SPRITE_WIDTH // 2 - self.width // 2
             self.y = player.y - self.height - 5
+            client.send_level_update(player.level, self.id, self.x, self.y)
         # Animação do choque
         if self.id == "chock":
             self.animation_timer += 1
@@ -669,6 +830,7 @@ class Level1_1:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
+                        client.send_event_door("level1_1")
                         break
 
     def draw(self):
@@ -741,11 +903,18 @@ class Level1_2:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 150, 53
+                        client.send_event_door("level1_2")
                         break
 
         for item in self.interactive_itens:
             if isinstance(item, InteractiveItem):
                 item.is_active = item.check_collision(player)
+                
+                if not item.is_active:
+                    for online_player in players_online:
+                        if item.check_collision(online_player):
+                            item.is_active = True
+                            break
 
         bridge = self.platforms[11]
         if any(item.is_active for item in self.interactive_itens if isinstance(item, InteractiveItem) and item.id == "button1"):
@@ -881,12 +1050,19 @@ class Level1_3:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 166, 0
+                        client.send_event_door("level1_3")
                         break
 
         # Atualiza estado dos botões
         for item in self.interactive_itens:
             if isinstance(item, InteractiveItem):
                 item.is_active = item.check_collision(player)
+                
+                if not item.is_active:
+                    for online_player in players_online:
+                        if item.check_collision(online_player):
+                            item.is_active = True
+                            break
 
         # Mapeia botões às plataformas
         button_to_platform = {
@@ -1004,6 +1180,7 @@ class Level2_1:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
+                        client.send_event_door("level2_1")
                         break
 
     def draw(self):
@@ -1120,6 +1297,7 @@ class Level2_2:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 440, -25
+                        client.send_event_door("level2_2")
                         break
             if item.id == "gosma" and item.check_collision(player):
                 player.respawn()
@@ -1190,6 +1368,7 @@ class Level2_3:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
+                        client.send_event_door("level2_3")
                         break
 
     def draw(self):
@@ -1224,7 +1403,7 @@ def collision_detect(a, b):
 
 # conexao com o servidor
 server_ip = input("Digite o endereço do servidor: ")
-server_ip = server_ip if server_ip else "192.168.1.17"
+server_ip = server_ip if server_ip else "10.1.40.203"
 
 server_port = input("Digite a porta do servidor: ")
 server_port = int(server_port) if server_port else 12345
@@ -1542,7 +1721,6 @@ def update():
     # Manda para o servidor a posição do player
     if game_state.esta_level1_1 or game_state.esta_level1_2 or game_state.esta_level1_3 or game_state.esta_level2_1 or game_state.esta_level2_2 or game_state.esta_level2_3:
         client.send_position(player.x, player.y, player.color, player.andando, player.level, player.facing_right)
-
 
 def draw():
     cls(7)
