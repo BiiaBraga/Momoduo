@@ -1702,6 +1702,15 @@ def draw():
         blt(0, 0, 0, 0, 0, 160, 120)
         blt(game_state.x_seta1, game_state.y_seta1, 0, 0, 128, 12, 12)
 
+        if game_state.character_color == 2:
+            blt(66, 63, 0, 26, 135, 21, 12)
+        if game_state.character_color == 3:
+            blt(66, 63, 0, 50, 135, 21, 12)
+        if game_state.character_color == 4:
+            blt(66, 63, 0, 74, 135, 21, 12)
+        
+
+
     if game_state.esta_choose_character:
         blt(0, 0, 0, 0, 0, 160, 120)
         blt(game_state.x_seta2, game_state.y_seta2, 1, 0, 0, 12, 12)
