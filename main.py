@@ -320,7 +320,6 @@ class Client:
                 }
             }).encode(), (self.server_ip, self.server_port))
     
-
 class Player:
     def __init__(self, x: int, y: int, color: int):
         self.x = x
@@ -1270,7 +1269,7 @@ class Level2_2:
             Item(447, 56, 9, 8, 24, 64, "trampoline"), Item(456, 56, 9, 8, 24, 64, "trampoline"), Item(465, 56, 9, 8, 24, 64, "trampoline"),    # posição estimada em cima da segunda plataforma
 
             #Caixas
-             Item(540, 52, 12, 12, 72, 24, "caixa1"), Item(620, 35, 16, 29, 56, 11, "caixa2")
+             Item(540, 52, 12, 12, 72, 24, "caixa1"), Item(620, 35, 16, 29, 56, 27, "caixa2")
 
         ]
         self.camera = Camera()

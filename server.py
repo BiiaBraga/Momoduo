@@ -152,8 +152,8 @@ class Server:
         print("Servidor parado.")
 
 if __name__ == "__main__":
-    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão 10.1.40.203): ")
-    host = host if host else '10.1.40.203'
+    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão  192.168.1.12): ")
+    host = host if host else '192.168.1.12'
 
     port = input("Digite a porta do servidor (ou pressione Enter para usar o padrão 12345): ")
     port = int(port) if port else 12345
