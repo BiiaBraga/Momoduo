@@ -11,7 +11,7 @@ WIDTH = 160
 HEIGHT = 120
 PLAYER_SPRITE_WIDTH = 12
 PLAYER_SPRITE_HEIGHT = 13
-PLAYER_SPEED = 4
+PLAYER_SPEED = 4 
 GRAVITY_SPEED = 4
 
 # Estado do jogo
@@ -23,21 +23,17 @@ class GameState:
 
         self.esta_levels_hello = False
         self.option_level_hello = 1
-        self.level_hello_1_achivied = False
-        self.level_hello_2_achivied = False
-        self.level_hello_3_achivied = False
         self.esta_level1_1 = False
         self.esta_level1_2 = False
         self.esta_level1_3 = False
+        self.level_hello_achivied = False
 
         self.esta_levels_stopmove = False
         self.option_level_stopmove = 1
-        self.level_stopmove_1_achivied = False
-        self.level_stopmove_2_achivied = False
-        self.level_stopmove_3_achivied = False
         self.esta_level2_1 = False
         self.esta_level2_2 = False
         self.esta_level2_3 = False
+        self.level_stopmove_achivied = False
 
         self.option_menu = 1
         self.x_seta1 = 42
@@ -192,61 +188,53 @@ class Client:
                     elif message['type'] == 'event_door':
                         data = message['data']
                         level = data['level']
-
-                        if level == "level1_1" and player.level == "level1_1":
-                            load("levels_hello_stop.pyxres")
+                        
+                        # Transição para o próximo nível com base no nível atual
+                        if level == "level1_1":
+                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level1_1 = False
                             game_state.esta_levels_hello = True
-                            game_state.level_hello_1_achivied = True
-                            game_state.option_level_hello = 1
-                            game_state.x_seta3 = 42
-                            game_state.pode_selecionar = False
+                            game_state.option_level_hello = 2  # Vai para o nível 1_2
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        elif level == "level1_2" and player.level == "level1_2":
-                            load("levels_hello_stop.pyxres")
+                            player.level = "level1_2"
+                        elif level == "level1_2":
+                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level1_2 = False
                             game_state.esta_levels_hello = True
-                            game_state.level_hello_2_achivied = True
-                            game_state.option_level_hello = 1
-                            game_state.x_seta3 = 42
-                            game_state.pode_selecionar = False
+                            game_state.option_level_hello = 3  # Vai para o nível 1_3
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        elif level == "level1_3" and player.level == "level1_3":
-                            load("levels_hello_stop.pyxres")
+                            player.level = "level1_3"
+                        elif level == "level1_3":
+                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level1_3 = False
                             game_state.esta_levels_hello = True
-                            game_state.level_hello_3_achivied = True
-                            game_state.option_level_hello = 1
-                            game_state.x_seta3 = 42
-                            game_state.pode_selecionar = False
+                            game_state.level_hello_achivied = True
+                            game_state.option_level_hello = 4  # Volta para o menu ou outro estado
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
+                            player.level = None
+                        
                         elif level == "level2_1" and player.level == "level2_1":
-                            load("levels_hello_stop.pyxres")
+                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level2_1 = False
-                            game_state.esta_levels_hello = True
-                            game_state.level_stopmove_1_achivied = True
-                            game_state.option_level_hello = 1
-                            game_state.x_seta3 = 42
-                            game_state.pode_selecionar = False
+                            game_state.esta_levels_stopmove = True
+                            game_state.option_level_stopmove = 2
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
+                            player.level = "level2_2"
                         elif level == "level2_2" and player.level == "level2_2":
-                            load("levels_hello_stop.pyxres")
+                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level2_2 = False
-                            game_state.esta_levels_hello = True
-                            game_state.level_stopmove_2_achivied = True
-                            game_state.option_level_hello = 1
-                            game_state.x_seta3 = 42
-                            game_state.pode_selecionar = False
+                            game_state.esta_levels_stopmove = True
+                            game_state.option_level_stopmove = 3
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
+                            player.level = "level2_3"
                         elif level == "level2_3" and player.level == "level2_3":
-                            load("levels_hello_stop.pyxres")
+                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level2_3 = False
-                            game_state.esta_levels_hello = True
-                            game_state.level_stopmove_3_achivied = True
-                            game_state.option_level_hello = 1
-                            game_state.x_seta3 = 42
-                            game_state.pode_selecionar = False
+                            game_state.esta_levels_stopmove = True
+                            game_state.level_stopmove_achivied = True
+                            game_state.option_level_stopmove = 4
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
+                            player.level = None
 
         except Exception as e:
             print(f"Erro no cliente: {e}")
@@ -822,10 +810,7 @@ class Level1_1:
                         load("levels_hello_stop.pyxres")
                         game_state.esta_level1_1 = False
                         game_state.esta_levels_hello = True
-                        game_state.level_hello_1_achivied = True
-                        game_state.option_level_hello = 1
-                        game_state.x_seta3 = 42
-                        game_state.pode_selecionar = False
+                        game_state.option_level_hello = 2
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
@@ -895,10 +880,7 @@ class Level1_2:
                         load("levels_hello_stop.pyxres")
                         game_state.esta_level1_2 = False
                         game_state.esta_levels_hello = True
-                        game_state.level_hello_2_achivied = True
-                        game_state.option_level_hello = 1
-                        game_state.x_seta3 = 42
-                        game_state.pode_selecionar = False
+                        game_state.option_level_hello = 3
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 150, 53
@@ -1041,11 +1023,9 @@ class Level1_3:
                     if other_item.id == "key" and other_item.collected:
                         load("levels_hello_stop.pyxres")
                         game_state.esta_level1_3 = False
-                        game_state.level_hello_3_achivied = True
+                        game_state.level_hello_achivied = True
                         game_state.esta_levels_hello = True
-                        game_state.option_level_hello = 1
-                        game_state.x_seta3 = 42
-                        game_state.pode_selecionar = False
+                        game_state.option_level_hello = 4
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 166, 0
@@ -1172,10 +1152,7 @@ class Level2_1:
                         load("levels_hello_stop.pyxres")
                         game_state.esta_level2_1 = False
                         game_state.esta_levels_stopmove = True
-                        game_state.level_stopmove_1_achivied = True
-                        game_state.option_level_stopmove = 1
-                        game_state.x_seta3 = 42
-                        game_state.pode_selecionar = False
+                        game_state.option_level_stopmove = 2
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
@@ -1289,10 +1266,7 @@ class Level2_2:
                         load("levels_hello_stop.pyxres")
                         game_state.esta_level2_2 = False
                         game_state.esta_levels_stopmove = True
-                        game_state.level_stopmove_2_achivied = True
-                        game_state.option_level_stopmove = 1
-                        game_state.x_seta3 = 42
-                        game_state.pode_selecionar = False
+                        game_state.option_level_stopmove = 3
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 440, -25
@@ -1360,10 +1334,8 @@ class Level2_3:
                         load("levels_hello_stop.pyxres")
                         game_state.esta_level2_3 = False
                         game_state.esta_levels_stopmove = True
-                        game_state.level_stopmove_3_achivied = True
-                        game_state.option_level_stopmove = 1
-                        game_state.x_seta3 = 42
-                        game_state.pode_selecionar = False
+                        game_state.level_stopmove_achivied = True
+                        game_state.option_level_stopmove = 4
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
@@ -1490,27 +1462,22 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_SPACE) and game_state.option_level == 0:
-            load("levels_hello_stop.pyxres")
             game_state.esta_levels = False
             game_state.esta_levels_hello = True
-            game_state.pode_selecionar = False
             player.level = None
+            game_state.option_level_hello == 1
 
         if game_state.pode_selecionar and btnp(KEY_SPACE) and game_state.option_level == 1:
-            load("levels_hello_stop.pyxres")
             game_state.esta_levels = False
             game_state.esta_levels_stopmove = True
-            game_state.pode_selecionar = False
-            game_state.x_seta3 = 42
             player.level = None
+            game_state.option_level_stopmove == 1
         
         if game_state.pode_selecionar and btnp(KEY_SPACE) and game_state.option_level == 2:
-            load("levels_hello_stop.pyxres")
             game_state.esta_levels = False
             game_state.esta_levels_stopmove = True
-            game_state.pode_selecionar = False
-            game_state.x_seta3 = 42
             player.level = None
+            game_state.option_level_stopmove == 1
 
         if game_state.pode_selecionar and btnp(KEY_B):
             load("Intro.pyxres")
@@ -1523,23 +1490,11 @@ def update():
 
     # hello momoduo
     if game_state.esta_levels_hello:
-        if btnp(KEY_RIGHT) and game_state.option_level_hello < 3:
-            game_state.option_level_hello += 1
-            game_state.x_seta3 += 27
-        if btnp(KEY_LEFT) and game_state.option_level_hello > 1:
-            game_state.option_level_hello -= 1
-            game_state.x_seta3 -= 27
-
-        if not btn(KEY_SPACE):
-            game_state.pode_selecionar = True
-
-        if game_state.pode_selecionar and btnp(KEY_SPACE):
             load("player.pyxres")
             if game_state.option_level_hello == 1:
                 level1_1 = Level1_1()
                 game_state.esta_levels_hello = False
                 game_state.esta_level1_1 = True
-                game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
                 player.level = 'level1_1'
@@ -1547,7 +1502,6 @@ def update():
                 level1_2 = Level1_2()
                 game_state.esta_levels_hello = False
                 game_state.esta_level1_2 = True
-                game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
                 player.level = 'level1_2'
@@ -1555,18 +1509,17 @@ def update():
                 level1_3 = Level1_3()
                 game_state.esta_levels_hello = False
                 game_state.esta_level1_3 = True
-                game_state.pode_selecionar = False
                 player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
                 player.respawn_x, player.respawn_y = 0, 50
                 player.level = 'level1_3'
 
-        if game_state.pode_selecionar and btnp(KEY_B):
-            load("levels.pyxres")
-            game_state.esta_levels_hello = False
-            game_state.esta_levels = True
-            game_state.option_level = 0
-            game_state.pode_selecionar = False
-            player.level = None
+            elif game_state.option_level_hello == 4:
+                load("levels.pyxres")
+                game_state.esta_levels_hello = False
+                game_state.esta_levels = True
+                game_state.option_level = 0
+                game_state.pode_selecionar = False
+                player.level = None
 
     if game_state.esta_level1_1:
         if btnp(KEY_R):
@@ -1578,12 +1531,13 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_B):
-                load("levels_hello_stop.pyxres")
+                load("levels.pyxres")
                 game_state.esta_level1_1 = False
-                game_state.esta_levels_hello = True
+                game_state.esta_levels = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
                 player.level = None
+                game_state.option_level_hello = 1
 
     if game_state.esta_level1_2:
         if btnp(KEY_R):
@@ -1595,12 +1549,13 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_B):
-                load("levels_hello_stop.pyxres")
+                load("levels.pyxres")
                 game_state.esta_level1_2 = False
-                game_state.esta_levels_hello = True
+                game_state.esta_levels = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
                 player.level = None
+                game_state.option_level_hello = 1
     
     if game_state.esta_level1_3:
         if btnp(KEY_R):
@@ -1612,22 +1567,15 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_B):
-                load("levels_hello_stop.pyxres")
+                load("levels.pyxres")
                 game_state.esta_level1_3 = False
-                game_state.esta_levels_hello = True
+                game_state.esta_levels = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
                 player.level = None
+                game_state.option_level_hello = 1
 
     # stop and move
-    if game_state.esta_levels_stopmove:
-        if btnp(KEY_RIGHT) and game_state.option_level_stopmove < 3:
-            game_state.option_level_stopmove += 1
-            game_state.x_seta3 += 27
-        if btnp(KEY_LEFT) and game_state.option_level_stopmove > 1:
-            game_state.option_level_stopmove -= 1
-            game_state.x_seta3 -= 27
-
         if not btn(KEY_SPACE):
             game_state.pode_selecionar = True
 
@@ -1666,6 +1614,39 @@ def update():
             game_state.pode_selecionar = False
             player.level = None
 
+    # stop and move
+    if game_state.esta_levels_stopmove:
+        
+            load("player.pyxres")
+            if game_state.option_level_stopmove == 1:
+                level2_1 = Level2_1()
+                game_state.esta_levels_stopmove= False
+                game_state.esta_level2_1 = True
+                player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
+                player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level2_1'
+            elif game_state.option_level_stopmove == 2:
+                level2_2 = Level2_2()
+                game_state.esta_levels_stopmove = False
+                game_state.esta_level2_2 = True
+                player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
+                player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level2_2'
+            elif game_state.option_level_stopmove == 3:
+                level2_3 = Level2_3()
+                game_state.esta_levels_stopmove = False
+                game_state.esta_level2_3 = True
+                player.x, player.y = 0, 64 - PLAYER_SPRITE_HEIGHT
+                player.respawn_x, player.respawn_y = 0, 50
+                player.level = 'level2_3'
+            elif game_state.option_level_stopmove == 4:
+                load("levels.pyxres")
+                game_state.esta_levels_stopmove = False
+                game_state.esta_levels = True
+                game_state.option_level = 0
+                game_state.pode_selecionar = False
+                player.level = None
+
     if game_state.esta_level2_1:
         if btnp(KEY_R):
             player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
@@ -1676,12 +1657,13 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_B):
-                load("levels_hello_stop.pyxres")
+                load("levels.pyxres")
                 game_state.esta_level2_1 = False
-                game_state.esta_levels_stopmove = True
+                game_state.esta_levels = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
                 player.level = None
+                game_state.option_level_stopmove = 1
 
     if game_state.esta_level2_2:
         if btnp(KEY_R):
@@ -1693,12 +1675,13 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_B):
-                load("levels_hello_stop.pyxres")
+                load("levels.pyxres")
                 game_state.esta_level2_2 = False
-                game_state.esta_levels_stopmove = True
+                game_state.esta_levels = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
                 player.level = None
+                game_state.option_level_stopmove = 1
 
     if game_state.esta_level2_3:
         if btnp(KEY_R):
@@ -1710,12 +1693,13 @@ def update():
             game_state.pode_selecionar = True
 
         if game_state.pode_selecionar and btnp(KEY_B):
-                load("levels_hello_stop.pyxres")
+                load("levels.pyxres")
                 game_state.esta_level2_3 = False
-                game_state.esta_levels_stopmove = True
+                game_state.esta_levels = True
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
                 player.level = None
+                game_state.option_level_stopmove = 1
 
     # Manda para o servidor a posição do player
     if game_state.esta_level1_1 or game_state.esta_level1_2 or game_state.esta_level1_3 or game_state.esta_level2_1 or game_state.esta_level2_2 or game_state.esta_level2_3:
@@ -1735,28 +1719,14 @@ def draw():
     if game_state.esta_levels:
         blt(0, 0, game_state.option_level, 0, 0, 160, 120)
 
-        if game_state.level_hello_1_achivied and game_state.level_hello_2_achivied and game_state.level_hello_3_achivied:
+        if game_state.level_hello_achivied:
             blt(39, 62, game_state.option_level, 26, 134, 21, 17, 1)
 
-        if game_state.level_stopmove_1_achivied and game_state.level_stopmove_2_achivied and game_state.level_stopmove_3_achivied:
+        if game_state.level_stopmove_achivied:
             blt(66, 62, game_state.option_level, 2, 134, 21, 17, 1)
 
-        # if game_state.level_other_1_achivied and game_state.level_other_2_achivied and game_state.level_other_3_achivied:
-        #     blt(93, 62, game_state.option_level, 2, 134, 21, 17, 1)
-
-
-    # hello momoduo
-    if game_state.esta_levels_hello:
-        blt(0, 0, 0, 0, 0, 160, 120)
-        blt(game_state.x_seta3, game_state.y_seta3, 1, 0, 0, 12, 12)
-
-        #desenha coroa no nivel que foi finalizado
-        if game_state.level_hello_1_achivied:
-            blt(40, 47, 0, 160, 0, 14, 12, 1)
-        if game_state.level_hello_2_achivied:
-            blt(67, 47, 0, 160, 0, 14, 12, 1)
-        if game_state.level_hello_3_achivied:
-            blt(93, 47, 0, 160, 0, 14, 12, 1)
+        #if game_state.level_other_achivied:
+        #    blt(93, 62, game_state.option_level, 2, 134, 21, 17, 1)
 
     if game_state.esta_level1_1:
         level1_1.draw()
@@ -1781,19 +1751,6 @@ def draw():
         for player_online in players_online:
             if player_online.level == player.level:
                 player_online.draw(level1_3.camera)
-
-    # stop and move
-    if game_state.esta_levels_stopmove:
-        blt(0, 0, 0, 0, 128, 160, 120)
-        blt(game_state.x_seta3, game_state.y_seta3, 1, 0, 0, 12, 12)
-
-        #desenha coroa no nivel que foi finalizado
-        if game_state.level_stopmove_1_achivied:
-            blt(40, 47, 0, 160, 0, 14, 12, 1)
-        if game_state.level_stopmove_2_achivied:
-            blt(67, 47, 0, 160, 0, 14, 12, 1)
-        if game_state.level_stopmove_3_achivied:
-            blt(93, 47, 0, 160, 0, 14, 12, 1)
 
     if game_state.esta_level2_1:
         level2_1.draw()
