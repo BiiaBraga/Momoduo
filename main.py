@@ -36,7 +36,7 @@ class GameState:
         self.level_stopmove_achivied = False
 
         self.option_menu = 1
-        self.x_seta1 = 42
+        self.x_seta1 = 46
         self.y_seta1 = 75
 
         self.option_character = 1
@@ -191,21 +191,18 @@ class Client:
                         
                         # Transição para o próximo nível com base no nível atual
                         if level == "level1_1":
-                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level1_1 = False
                             game_state.esta_levels_hello = True
                             game_state.option_level_hello = 2  # Vai para o nível 1_2
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
                             player.level = "level1_2"
                         elif level == "level1_2":
-                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level1_2 = False
                             game_state.esta_levels_hello = True
                             game_state.option_level_hello = 3  # Vai para o nível 1_3
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
                             player.level = "level1_3"
                         elif level == "level1_3":
-                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level1_3 = False
                             game_state.esta_levels_hello = True
                             game_state.level_hello_achivied = True
@@ -214,21 +211,18 @@ class Client:
                             player.level = None
                         
                         elif level == "level2_1" and player.level == "level2_1":
-                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level2_1 = False
                             game_state.esta_levels_stopmove = True
                             game_state.option_level_stopmove = 2
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
                             player.level = "level2_2"
                         elif level == "level2_2" and player.level == "level2_2":
-                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level2_2 = False
                             game_state.esta_levels_stopmove = True
                             game_state.option_level_stopmove = 3
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
                             player.level = "level2_3"
                         elif level == "level2_3" and player.level == "level2_3":
-                            #load("levels_hello_stop.pyxres")
                             game_state.esta_level2_3 = False
                             game_state.esta_levels_stopmove = True
                             game_state.level_stopmove_achivied = True
@@ -807,7 +801,6 @@ class Level1_1:
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
-                        load("levels_hello_stop.pyxres")
                         game_state.esta_level1_1 = False
                         game_state.esta_levels_hello = True
                         game_state.option_level_hello = 2
@@ -864,7 +857,7 @@ class Level1_2:
             Item(216, 63, 6, 1, 91, 47)
         ]
         self.camera = Camera()
-        self.bridge_growth_speed = 2
+        self.bridge_growth_speed = 5
         self.bridge_max_width = 110
         self.bridge_min_width = 0
 
@@ -877,7 +870,6 @@ class Level1_2:
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
-                        load("levels_hello_stop.pyxres")
                         game_state.esta_level1_2 = False
                         game_state.esta_levels_hello = True
                         game_state.option_level_hello = 3
@@ -1021,7 +1013,6 @@ class Level1_3:
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
-                        load("levels_hello_stop.pyxres")
                         game_state.esta_level1_3 = False
                         game_state.level_hello_achivied = True
                         game_state.esta_levels_hello = True
@@ -1149,7 +1140,6 @@ class Level2_1:
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
-                        load("levels_hello_stop.pyxres")
                         game_state.esta_level2_1 = False
                         game_state.esta_levels_stopmove = True
                         game_state.option_level_stopmove = 2
@@ -1263,7 +1253,6 @@ class Level2_2:
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
-                        load("levels_hello_stop.pyxres")
                         game_state.esta_level2_2 = False
                         game_state.esta_levels_stopmove = True
                         game_state.option_level_stopmove = 3
@@ -1331,7 +1320,6 @@ class Level2_3:
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
-                        load("levels_hello_stop.pyxres")
                         game_state.esta_level2_3 = False
                         game_state.esta_levels_stopmove = True
                         game_state.level_stopmove_achivied = True
@@ -1398,24 +1386,24 @@ def update():
     global game_state, level1_1, level1_2, level1_3, level2_1, level2_2, level2_3
 
     if game_state.esta_menu:
-        if btnp(KEY_RIGHT) and game_state.option_menu < 4:
+        if btnp(KEY_RIGHT) and game_state.option_menu < 3:
             game_state.option_menu += 1
-            game_state.x_seta1 += 19
+            game_state.x_seta1 += 24
         if btnp(KEY_LEFT) and game_state.option_menu > 1:
             game_state.option_menu -= 1
-            game_state.x_seta1 -= 19
+            game_state.x_seta1 -= 24
 
         if game_state.option_menu == 1 and btnp(KEY_SPACE):
             load("levels.pyxres")
             game_state.esta_menu = False
             game_state.esta_levels = True
             player.level = None
-        if game_state.option_menu == 3 and btnp(KEY_SPACE):
+        if game_state.option_menu == 2 and btnp(KEY_SPACE):
             load("Change_character.pyxres")
             game_state.esta_menu = False
             game_state.esta_choose_character = True
             player.level = None
-        if game_state.option_menu == 4 and btnp(KEY_SPACE):
+        if game_state.option_menu == 3 and btnp(KEY_SPACE):
             client.send_disconnect()
             quit()
 
@@ -1438,7 +1426,7 @@ def update():
             game_state.esta_menu = True
             game_state.option_menu = 1
             game_state.pode_selecionar = False
-            game_state.x_seta1 = 42
+            game_state.x_seta1 = 46
             player.level = None
 
         if game_state.pode_selecionar and btnp(KEY_B):
@@ -1447,7 +1435,7 @@ def update():
             game_state.esta_menu = True
             game_state.option_menu = 1
             game_state.pode_selecionar = False
-            game_state.x_seta1 = 42
+            game_state.x_seta1 = 46
             player.level = None
 
     if game_state.esta_levels:
@@ -1485,7 +1473,7 @@ def update():
             game_state.esta_menu = True
             game_state.option_menu = 1
             game_state.pode_selecionar = False
-            game_state.x_seta1 = 42
+            game_state.x_seta1 = 46
             player.level = None
 
     # hello momoduo
@@ -1520,6 +1508,7 @@ def update():
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
                 player.level = None
+                game_state.option_level_hello = 1
 
     if game_state.esta_level1_1:
         if btnp(KEY_R):
@@ -1646,6 +1635,7 @@ def update():
                 game_state.option_level = 0
                 game_state.pode_selecionar = False
                 player.level = None
+                game_state.option_level_stopmove = 1
 
     if game_state.esta_level2_1:
         if btnp(KEY_R):
@@ -1735,7 +1725,10 @@ def draw():
         for player_online in players_online:
             if player_online.level == player.level:
                 player_online.draw(level1_1.camera)
-    
+        
+        # Desenha o nome do nivel
+        text(2, 2, "1/3", 1)
+  
     if game_state.esta_level1_2:
         level1_2.draw()
         player.draw(level1_2.camera)
@@ -1743,6 +1736,9 @@ def draw():
         for player_online in players_online:
             if player_online.level == player.level:
                 player_online.draw(level1_2.camera)
+
+        # Desenha o nome do nivel
+        text(2, 2, "2/3", 1)
 
     if game_state.esta_level1_3:
         level1_3.draw()
@@ -1752,6 +1748,9 @@ def draw():
             if player_online.level == player.level:
                 player_online.draw(level1_3.camera)
 
+        # Desenha o nome do nivel
+        text(2, 2, "3/3", 1)
+
     if game_state.esta_level2_1:
         level2_1.draw()
         player.draw(level2_1.camera)
@@ -1759,6 +1758,9 @@ def draw():
         for player_online in players_online:
             if player_online.level == player.level:
                 player_online.draw(level2_1.camera)
+
+        # Desenha o nome do nivel
+        text(2, 2, "1/3", 1)
     
     if game_state.esta_level2_2:
         level2_2.draw()
@@ -1768,6 +1770,9 @@ def draw():
             if player_online.level == player.level:
                 player_online.draw(level2_2.camera)
 
+        # Desenha o nome do nivel
+        text(2, 2, "2/3", 1)
+
     if game_state.esta_level2_3:
         level2_3.draw()
         player.draw(level2_3.camera)
@@ -1775,6 +1780,9 @@ def draw():
         for player_online in players_online:
             if player_online.level == player.level:
                 player_online.draw(level2_3.camera)
+        
+        # Desenha o nome do nivel
+        text(2, 2, "3/3", 1)
 
 load("Intro.pyxres")
 run(update, draw)
