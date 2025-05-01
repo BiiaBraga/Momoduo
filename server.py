@@ -1,5 +1,6 @@
 import socket
 import json
+import time
 
 class Server:
     def __init__(self, host, port):
@@ -9,6 +10,12 @@ class Server:
         self.running = False
 
         self.jogadores = []
+
+        # Atributos do semáforo
+        self.semaphore_color = 1  # Começa em vermelho
+        self.animation_timer = 0
+        self.animation_interval = 45  # Mesmo intervalo usado nos clientes
+        self.last_update = time.time()  # Para controlar o tempo de atualização
 
     def start(self):
         try:
@@ -119,6 +126,43 @@ class Server:
                                 'data': message['data']
                             }).encode(), addr_jogador)
                         print(f"Evento de porta recebido de {addr} para nível {message['data']['level']}")
+
+                    elif message['type'] == 'respawn':
+                            print(f"Evento de respawn recebido do jogador {message['id']} para {message['data']['player_id']}")
+                            for jogador in self.jogadores:
+                                if jogador[0] == message['id']:
+                                    for _, addr_jogador, _ in self.jogadores:
+                                        if addr_jogador != addr:
+                                            self.socket.sendto(json.dumps({
+                                                'type': 'respawn',
+                                                'id': message['id'],
+                                                'data': message['data']
+                                            }).encode(), addr_jogador)
+                                    break
+                            else:
+                                print(f"Jogador não encontrado: {addr}")
+
+                # Atualiza o semáforo
+                current_time = time.time()
+                if current_time - self.last_update >= 1/30:  # Atualiza a cada ~33ms (30 FPS)
+                    self.animation_timer += 1
+                    if self.animation_timer >= self.animation_interval:
+                        if self.semaphore_color == 1:
+                            self.semaphore_color = 3  # Vermelho -> Verde
+                        elif self.semaphore_color == 2:
+                            self.semaphore_color = 1  # Amarelo -> Vermelho
+                        elif self.semaphore_color == 3:
+                            self.semaphore_color = 2  # Verde -> Amarelo
+                        self.animation_timer = 0
+                        # Envia atualização do semáforo para todos os jogadores
+                        for _, addr_jogador, _ in self.jogadores:
+                            self.socket.sendto(json.dumps({
+                                'type': 'semaphore_update',
+                                'data': {
+                                    'semaphore_color': self.semaphore_color
+                                }
+                            }).encode(), addr_jogador)
+                    self.last_update = current_time
 
         except KeyboardInterrupt:
             print("Servidor interrompido pelo usuário.")

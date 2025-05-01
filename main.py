@@ -35,6 +35,8 @@ class GameState:
         self.esta_level2_3 = False
         self.level_stopmove_achivied = False
 
+        self.semaphore_color = 1
+
         self.option_menu = 1
         self.x_seta1 = 46
         self.y_seta1 = 75
@@ -64,13 +66,12 @@ class Camera:
         self.y = target.y - self.height // 2 + PLAYER_SPRITE_HEIGHT // 2
 
 class Client:
-    def __init__(self, server_ip, server_port):
+    def __init__(self, server_ip, server_port, player):
         self.server_ip = server_ip
         self.server_port = server_port
-
+        self.player = player
         self.socket = None
-        self.id = None # usado para armazenar o endereço do cliente e deferenciar dos outros jogadores
-
+        self.id = None 
         self.running = False
 
     def start(self):
@@ -92,6 +93,7 @@ class Client:
                     
                     if message['type'] == 'connect':
                         self.id = message['data']
+                        self.player.id = self.id
                         
                         self.socket.sendto(json.dumps({
                             'type': 'connected'
@@ -230,6 +232,106 @@ class Client:
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
                             player.level = None
 
+                    elif message['type'] == 'semaphore_update':
+                        data = message['data']
+                        game_state.semaphore_color = data['semaphore_color']
+                        game_state.animation_timer = 0  # Reseta o timer local para evitar conflitos
+
+                    elif message['type'] == 'respawn':
+                        data = message['data']
+                        player_id = data['player_id']
+                        x = data['x']
+                        y = data['y']
+                        if player_id == self.id:
+                            self.player.x = x
+                            self.player.y = y
+                            self.player.upward_speed = 0
+                            self.player.on_floor = False
+                            print(f"Jogador local {player_id} respawned at ({x}, {y})")
+                            # Reseta itens (como a chave) localmente
+                            if game_state.esta_level1_1 and level1_1:
+                                for item in level1_1.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+                            elif game_state.esta_level1_2 and level1_2:
+                                for item in level1_2.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+                            elif game_state.esta_level1_3 and level1_3:
+                                for item in level1_3.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+                            elif game_state.esta_level2_1 and level2_1:
+                                for item in level2_1.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+                            elif game_state.esta_level2_2 and level2_2:
+                                for item in level2_2.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+                            elif game_state.esta_level2_3 and level2_3:
+                                for item in level2_3.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+                        else:
+                            for online_player in players_online:
+                                if online_player.id == player_id:
+                                    online_player.x = x
+                                    online_player.y = y
+                                    online_player.upward_speed = 0
+                                    online_player.on_floor = False
+                                    print(f"Jogador online {player_id} respawned at ({x}, {y})")
+                                    # Reseta itens (como a chave) localmente
+                                    if game_state.esta_level1_1 and level1_1:
+                                        for item in level1_1.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                    elif game_state.esta_level1_2 and level1_2:
+                                        for item in level1_2.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                    elif game_state.esta_level1_3 and level1_3:
+                                        for item in level1_3.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                    elif game_state.esta_level2_1 and level2_1:
+                                        for item in level2_1.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                    elif game_state.esta_level2_2 and level2_2:
+                                        for item in level2_2.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                    elif game_state.esta_level2_3 and level2_3:
+                                        for item in level2_3.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                    break
+
         except Exception as e:
             print(f"Erro no cliente: {e}")
         
@@ -302,8 +404,21 @@ class Client:
                 }
             }).encode(), (self.server_ip, self.server_port))
     
+    def send_event_respawn(self, player_id, x, y):
+        if self.socket and self.running and player_id is not None:
+            self.socket.sendto(json.dumps({
+                'type': 'respawn',
+                'id': self.id,
+                'data': {
+                    'player_id': player_id,  # ID of the respawning player
+                    'x': x,
+                    'y': y
+                }
+            }).encode(), (self.server_ip, self.server_port))
+
 class Player:
     def __init__(self, x: int, y: int, color: int):
+        self.id = None
         self.x = x
         self.y = y
         self.color = color
@@ -1126,8 +1241,6 @@ class Level2_1:
             #chave e porta
             Item(117, 29, 16, 7, 90, 34, "key"), Item(450, 50, 16, 14, 72, 40, "door"),
 
-            #fantasma
-            Item(-60, 10, 30, 27, 90, 0, "ghost")
         ]
         self.camera = Camera()
 
@@ -1149,6 +1262,30 @@ class Level2_1:
                         client.send_event_door("level2_1")
                         break
 
+        # Verifica se qualquer jogador está andando no vermelho
+        trigger_respawn = False
+        
+        # Checa jogador local
+        if game_state.semaphore_color == 1 and (player.andando or player.upward_speed != 0):
+            trigger_respawn = True
+        # Checa jogadores online
+        for online_player in players_online:
+            if game_state.semaphore_color == 1 and (online_player.andando or online_player.upward_speed != 0):
+                trigger_respawn = True
+
+        # Aplica respawn a todos os jogadores se necessário
+        if trigger_respawn:
+            # Respawn do jogador local
+            player.respawn()
+            client.send_event_respawn(player.id, player.x, player.y)  # Sincroniza respawn do jogador local
+            print("Jogador local reiniciado devido a movimento no vermelho.")
+            
+            # Respawn de todos os jogadores online
+            for online_player in players_online:
+                online_player.respawn()
+                client.send_event_respawn(online_player.id, online_player.x, online_player.y)  # Sincroniza respawn
+                print(f"Jogador online {online_player.id} reiniciado devido a movimento no vermelho.")
+
     def draw(self):
 
         # Define a posição fixa do texto no mundo do jogo
@@ -1159,8 +1296,8 @@ class Level2_1:
         screen_y = text_world_y - self.camera.y
 
         # Desenha o texto na posição ajustada
-        text(screen_x, screen_y, "Don't move", 1)
-        text(screen_x+8, screen_y+10, "together!", 1)
+        text(screen_x, screen_y, "Attention to the", 1)
+        text(screen_x+8, screen_y+10, "semaphore!", 1)
 
         for platform in self.platforms:
             platform.draw(self.camera)
@@ -1170,7 +1307,16 @@ class Level2_1:
         # Desenha o texto na posição ajustada
         text(2, 108, "Click B", 1)
         text(2, 114, "to back", 1)
-        
+
+        # Desenha o semáforo
+        blt(66, 5, 0, 112, 49, 113, 12)
+        if game_state.semaphore_color == 1:
+            blt(66, 5, 0, 112, 65, 11, 12)     #red
+        elif game_state.semaphore_color == 2:
+            blt(76, 5, 0, 128, 65, 11, 12)     #yellow
+        elif game_state.semaphore_color == 3:
+            blt(86, 5, 0, 144, 65, 11, 12)     #green
+              
 class Level2_2:
     def __init__(self):
         self.platforms = [
@@ -1268,6 +1414,30 @@ class Level2_2:
             if item.id == "trampoline" and item.check_collision(player):
                 player.upward_speed = 15  # aumenta o valor pra um pulo mais forte
 
+        # Verifica se qualquer jogador está andando no vermelho
+        trigger_respawn = False
+        
+        # Checa jogador local
+        if game_state.semaphore_color == 1 and (player.andando or player.upward_speed != 0):
+            trigger_respawn = True
+        # Checa jogadores online
+        for online_player in players_online:
+            if game_state.semaphore_color == 1 and (online_player.andando or online_player.upward_speed != 0):
+                trigger_respawn = True
+
+        # Aplica respawn a todos os jogadores se necessário
+        if trigger_respawn:
+            # Respawn do jogador local
+            player.respawn()
+            client.send_event_respawn(player.id, player.x, player.y)  # Sincroniza respawn do jogador local
+            print("Jogador local reiniciado devido a movimento no vermelho.")
+            
+            # Respawn de todos os jogadores online
+            for online_player in players_online:
+                online_player.respawn()
+                client.send_event_respawn(online_player.id, online_player.x, online_player.y)  # Sincroniza respawn
+                print(f"Jogador online {online_player.id} reiniciado devido a movimento no vermelho.")
+
     def draw(self):
         for platform in self.platforms:
             platform.draw(self.camera)
@@ -1277,6 +1447,15 @@ class Level2_2:
         # Desenha o texto na posição ajustada
         text(2, 108, "Click B", 1)
         text(2, 114, "to back", 1)
+
+        # Desenha o semáforo
+        blt(66, 5, 0, 112, 49, 113, 12)
+        if game_state.semaphore_color == 1:
+            blt(66, 5, 0, 112, 65, 11, 12)     #red
+        elif game_state.semaphore_color == 2:
+            blt(76, 5, 0, 128, 65, 11, 12)     #yellow
+        elif game_state.semaphore_color == 3:
+            blt(86, 5, 0, 144, 65, 11, 12)     #green
 
 class Level2_3:
     def __init__(self):
@@ -1330,6 +1509,30 @@ class Level2_3:
                         client.send_event_door("level2_3")
                         break
 
+        # Verifica se qualquer jogador está andando no vermelho
+        trigger_respawn = False
+        
+        # Checa jogador local
+        if game_state.semaphore_color == 1 and (player.andando or player.upward_speed != 0):
+            trigger_respawn = True
+        # Checa jogadores online
+        for online_player in players_online:
+            if game_state.semaphore_color == 1 and (online_player.andando or online_player.upward_speed != 0):
+                trigger_respawn = True
+
+        # Aplica respawn a todos os jogadores se necessário
+        if trigger_respawn:
+            # Respawn do jogador local
+            player.respawn()
+            client.send_event_respawn(player.id, player.x, player.y)  # Sincroniza respawn do jogador local
+            print("Jogador local reiniciado devido a movimento no vermelho.")
+            
+            # Respawn de todos os jogadores online
+            for online_player in players_online:
+                online_player.respawn()
+                client.send_event_respawn(online_player.id, online_player.x, online_player.y)  # Sincroniza respawn
+                print(f"Jogador online {online_player.id} reiniciado devido a movimento no vermelho.")
+
     def draw(self):
 
         # Define a posição fixa do texto no mundo do jogo
@@ -1352,6 +1555,15 @@ class Level2_3:
         text(2, 108, "Click B", 1)
         text(2, 114, "to back", 1)
 
+        # Desenha o semáforo
+        blt(66, 5, 0, 112, 49, 113, 12)
+        if game_state.semaphore_color == 1:
+            blt(66, 5, 0, 112, 65, 11, 12)     #red
+        elif game_state.semaphore_color == 2:
+            blt(76, 5, 0, 128, 65, 11, 12)     #yellow
+        elif game_state.semaphore_color == 3:
+            blt(86, 5, 0, 144, 65, 11, 12)     #green
+
 def collision_detect(a, b):
     return not (
         a.y + a.height - 1 < b.y or
@@ -1369,7 +1581,7 @@ server_port = int(server_port) if server_port else 12345
 
 # Inicialização
 player = Player(WIDTH // 2, HEIGHT // 2, 1)
-client = Client(server_ip, server_port)
+client = Client(server_ip, server_port, player)
 client_thread = threading.Thread(target=client.start, daemon=True)
 client_thread.start()
 
@@ -1709,8 +1921,6 @@ def draw():
         if game_state.character_color == 4:
             blt(66, 63, 0, 74, 135, 21, 12)
         
-
-
     if game_state.esta_choose_character:
         blt(0, 0, 0, 0, 0, 160, 120)
         blt(game_state.x_seta2, game_state.y_seta2, 1, 0, 0, 12, 12)
