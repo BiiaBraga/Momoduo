@@ -785,11 +785,41 @@ class Item:
             self.max_x = self.initial_x
 
     def update(self, player):
+        previous_x = self.x
+        previous_y = self.y
+
         # Atualiza a chave se coletada
         if self.id == "key" and self.collected:
             self.x = player.x + PLAYER_SPRITE_WIDTH // 2 - self.width // 2
             self.y = player.y - self.height - 5
             client.send_level_update(player.level, self.id, self.x, self.y)
+
+        if self.id == "caixa1":
+            # Verifica colisão com o jogador para mover a caixa
+            if self.check_collision(player) and player.andando:
+                if player.facing_right:
+                    self.x += 1  # Empurra para a direita
+                else:
+                    self.x -= 1  # Empurra para a esquerda
+            # Aplica gravidade
+            self.y += 1  # Simula gravidade
+            # Verifica colisão com plataformas (exemplo simplificado)
+            level = None
+            if player.level == "level2_2":
+                level = level2_2
+            if level:
+                for platform in level.platforms:
+                    if (self.x < platform.x + platform.width and
+                        self.x + self.width > platform.x and
+                        self.y + self.height > platform.y and
+                        self.y < platform.y + platform.height):
+                        self.y = platform.y - self.height  # Ajusta para ficar sobre a plataforma
+                        break
+
+            # Envia atualização se a posição mudou
+            if self.x != previous_x or self.y != previous_y:
+                client.send_level_update(player.level, self.id, self.x, self.y)
+
         # Animação do choque
         if self.id == "chock":
             self.animation_timer += 1
@@ -1572,6 +1602,11 @@ def collision_detect(a, b):
         a.x > b.x + b.width - 1
     )
 
+class PyxelSounds:
+    def __init__(self):
+        # Toca apenas a música de fundo no canal 0
+        playm(0, loop=True)
+
 # conexao com o servidor
 server_ip = input("Digite o endereço do servidor: ")
 server_ip = server_ip if server_ip else "10.1.40.203"
@@ -1920,6 +1955,8 @@ def draw():
             blt(66, 63, 0, 50, 135, 21, 12)
         if game_state.character_color == 4:
             blt(66, 63, 0, 74, 135, 21, 12)
+
+        
         
     if game_state.esta_choose_character:
         blt(0, 0, 0, 0, 0, 160, 120)
@@ -2004,4 +2041,5 @@ def draw():
         text(2, 2, "3/3", 1)
 
 load("Intro.pyxres")
+sounds = PyxelSounds()
 run(update, draw)
