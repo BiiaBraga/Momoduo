@@ -501,6 +501,7 @@ class Player:
                                     break
                         if can_move:
                             item.x -= 1  # Move a caixa
+                            client.send_level_update(self.level, item.id, item.x, item.y)
                         else:
                             self.x = previous_x  # Bloqueia o jogador
                             break
@@ -519,7 +520,6 @@ class Player:
                     if collision_detect(self, player):
                         self.x = previous_x
                         break
-
 
         if btn(KEY_RIGHT):
             self.andando = True
@@ -546,6 +546,7 @@ class Player:
                                     break
                         if can_move:
                             item.x += 1  # Move a caixa
+                            client.send_level_update(self.level, item.id, item.x, item.y)
                         else:
                             self.x = previous_x  # Bloqueia o jogador
                             break
