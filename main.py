@@ -932,7 +932,7 @@ class Level1_1:
             Item(150, 60, 5, 4, 98, 52), Item(190, 60, 5, 4, 98, 52),
 
             #chave e porta
-            Item(117, 29, 16, 7, 90, 34, "key"),
+            Item(117, 29, 12, 5, 90, 34, "key"),
             Item(230, 50, 16, 14, 72, 40, "door")
         ]
         self.camera = Camera()
@@ -992,7 +992,7 @@ class Level1_2:
             Item(204, 40, 20, 20, 65, 0),
             
             #chave e porta
-            Item(150, 53, 16, 7, 90, 34, "key"),
+            Item(150, 53, 12, 5, 90, 34, "key"),
             Item(250, 50, 16, 14, 72, 40, "door")
         ]
         self.interactive_itens = [
@@ -1124,7 +1124,7 @@ class Level1_3:
             Item(240, 60, 5, 4, 98, 52),
             Item(320, 60, 5, 4, 98, 52),
             Item(375, 60, 5, 4, 98, 52),
-            Item(166, 0, 16, 7, 90, 34, "key"),  # Chave
+            Item(166, 0, 12, 5, 90, 34, "key"),  # Chave
             Item(350, 50, 16, 14, 72, 40, "door")  # Porta
         ]
         self.interactive_itens = [
@@ -1269,7 +1269,7 @@ class Level2_1:
             Item(350, 60, 5, 4, 98, 52), Item(390, 60, 5, 4, 98, 52), Item(430, 60, 5, 4, 98, 52),
 
             #chave e porta
-            Item(117, 29, 16, 7, 90, 34, "key"), Item(450, 50, 16, 14, 72, 40, "door"),
+            Item(117, 29, 12, 5, 90, 34, "key"), Item(450, 50, 16, 14, 72, 40, "door"),
 
         ]
         self.camera = Camera()
@@ -1339,7 +1339,7 @@ class Level2_1:
         text(2, 114, "to back", 1)
 
         # Desenha o semáforo
-        blt(66, 5, 0, 112, 49, 113, 12)
+        blt(66, 5, 0, 112, 49, 31, 12)
         if game_state.semaphore_color == 1:
             blt(66, 5, 0, 112, 65, 11, 12)     #red
         elif game_state.semaphore_color == 2:
@@ -1366,7 +1366,7 @@ class Level2_2:
             Platform(512, 64, 16, 14, 32, 16), Platform(528, 64, 16, 14, 32, 16), Platform(544, 64, 16, 14, 32, 16), 
             Platform(560, 64, 16, 14, 32, 16), Platform(576, 64, 16, 14, 32, 16), Platform(592, 64, 16, 14, 32, 16), 
             Platform(608, 64, 16, 14, 32, 16), Platform(624, 64, 16, 14, 32, 16), Platform(640, 64, 16, 14, 32, 16), 
-            Platform(652, 64, 16, 14, 32, 32),
+            Platform(652, 64, 16, 14, 32, 16),
 
             # primeira montanha
             Platform(144, 50, 16, 16, 24, 96), Platform(177, 34, 16, 16, 24, 96), Platform(192, 18, 16, 16, 24, 96),
@@ -1379,9 +1379,14 @@ class Level2_2:
             Platform(256, 64, 16, 14, 48, 74), Platform(256, 18, 16, 16, 96, 72), Platform(256, 34, 16, 16, 96, 72), 
             Platform(256, 50, 16, 16, 96, 72),
 
+            #base para pegar a caixa
+            Platform(620, 15, 16, 14, 0, 96), Platform(600, 5, 16, 14, 0, 96), 
+            Platform(548, -5, 16, 14, 32, 0), Platform(564, -5, 16, 14, 32, 16), Platform(580, -5, 16, 14, 32, 32),
+
             #base final
-            Platform(668, 30, 16, 14, 32, 0), Platform(684, 30, 16, 14, 32, 16), Platform(700, 30, 16, 14, 32, 16), 
-            Platform(716, 30, 16, 14, 32, 32)
+            Platform(668, 30, 16, 16, 24, 96), Platform(684, 30, 16, 16, 48, 96), Platform(700, 30, 16, 16, 48, 96), Platform(716, 30, 16, 16, 72, 96),
+            Platform(668, 46, 16, 16, 96, 96), Platform(684, 46, 16, 16, 72, 72), Platform(700, 46, 16, 16, 72, 72), Platform(716, 46, 16, 16, 96, 72),
+            Platform(668, 62, 16, 16, 24, 72), Platform(684, 62, 16, 16, 24, 72), Platform(700, 62, 16, 16, 24, 72), Platform(716, 62, 16, 16, 48, 72)
             
         ]
 
@@ -1397,7 +1402,7 @@ class Level2_2:
             Item(130, 58, 8, 6, 40, 66, "gosma"),
 
             #chave e a porta
-            Item(440, -25, 16, 7, 90, 34, "key"),
+            Item(440, -25, 12, 5, 90, 34, "key"),
             Item(690, 16, 16, 14, 72, 40, "door"),
 
             #choque
@@ -1412,7 +1417,7 @@ class Level2_2:
             Item(447, 56, 9, 8, 24, 64, "trampoline"), Item(456, 56, 9, 8, 24, 64, "trampoline"), Item(465, 56, 9, 8, 24, 64, "trampoline"),    # posição estimada em cima da segunda plataforma
 
             #Caixas
-             Item(540, 52, 12, 12, 72, 24, "caixa1"), Item(620, 35, 16, 29, 56, 27, "caixa2")
+             Item(550, -20, 12, 15, 72, 24, "caixa1")
 
         ]
         self.camera = Camera()
@@ -1479,7 +1484,7 @@ class Level2_2:
         text(2, 114, "to back", 1)
 
         # Desenha o semáforo
-        blt(66, 5, 0, 112, 49, 113, 12)
+        blt(66, 5, 0, 112, 49, 31, 12)
         if game_state.semaphore_color == 1:
             blt(66, 5, 0, 112, 65, 11, 12)     #red
         elif game_state.semaphore_color == 2:
@@ -1516,7 +1521,7 @@ class Level2_3:
             Item(350, 60, 5, 4, 98, 52), Item(390, 60, 5, 4, 98, 52), Item(430, 60, 5, 4, 98, 52),
 
             #chave e porta
-            Item(117, 29, 16, 7, 90, 34, "key"), Item(450, 50, 16, 14, 72, 40, "door")
+            Item(117, 29, 12, 5, 90, 34, "key"), Item(450, 50, 16, 14, 72, 40, "door")
         ]
         self.camera = Camera()
 
@@ -1586,7 +1591,7 @@ class Level2_3:
         text(2, 114, "to back", 1)
 
         # Desenha o semáforo
-        blt(66, 5, 0, 112, 49, 113, 12)
+        blt(66, 5, 0, 112, 49, 31, 12)
         if game_state.semaphore_color == 1:
             blt(66, 5, 0, 112, 65, 11, 12)     #red
         elif game_state.semaphore_color == 2:
@@ -1955,8 +1960,6 @@ def draw():
             blt(66, 63, 0, 50, 135, 21, 12)
         if game_state.character_color == 4:
             blt(66, 63, 0, 74, 135, 21, 12)
-
-        
         
     if game_state.esta_choose_character:
         blt(0, 0, 0, 0, 0, 160, 120)
