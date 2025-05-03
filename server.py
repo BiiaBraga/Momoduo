@@ -17,6 +17,18 @@ class Server:
         self.animation_interval = 45  # Mesmo intervalo usado nos clientes
         self.last_update = time.time()  # Para controlar o tempo de atualização
 
+        # Atributos do fogo no nível 2-3
+        self.fire_visible = True  # Estado inicial do fogo (visível)
+        self.fire_timer = 0  # Temporizador para o fogo
+        self.fire_interval = 60  # 2 segundos a 30 FPS (30 frames/seg * 2 seg = 60 frames)
+
+        # Atributos para a plataforma elevador no nível 2-3
+        self.elevator_y = 60  # Posição inicial (y=60, conforme definido em Level2_3)
+        self.elevator_initial_y = 60
+        self.elevator_max_y = 4  # 60 - 56 = 4 (56 pixels acima, conforme Platform.max_y)
+        self.elevator_speed = 0.5  # Aumentar velocidade para movimento mais fluido (era 0.5)
+        self.player_positions = {}  # Armazena posições dos jogadores: {id: {'x': x, 'y': y, 'level': level}}
+
     def start(self):
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -76,6 +88,12 @@ class Server:
                     elif message['type'] == 'move':
                         for jogador in self.jogadores:
                             if jogador[0] == message['id']:
+                                # Atualiza a posição do jogador
+                                self.player_positions[jogador[0]] = {
+                                    'x': message['data']['x'],
+                                    'y': message['data']['y'],
+                                    'level': message['data']['level']
+                                }
                                 # Envia a movimentação para todos os jogadores
                                 for _, addr_jogador, _ in self.jogadores:
                                     if addr_jogador != addr:
@@ -128,23 +146,24 @@ class Server:
                         print(f"Evento de porta recebido de {addr} para nível {message['data']['level']}")
 
                     elif message['type'] == 'respawn':
-                            print(f"Evento de respawn recebido do jogador {message['id']} para {message['data']['player_id']}")
-                            for jogador in self.jogadores:
-                                if jogador[0] == message['id']:
-                                    for _, addr_jogador, _ in self.jogadores:
-                                        if addr_jogador != addr:
-                                            self.socket.sendto(json.dumps({
-                                                'type': 'respawn',
-                                                'id': message['id'],
-                                                'data': message['data']
-                                            }).encode(), addr_jogador)
-                                    break
-                            else:
-                                print(f"Jogador não encontrado: {addr}")
+                        print(f"Evento de respawn recebido do jogador {message['id']} para {message['data']['player_id']}")
+                        for jogador in self.jogadores:
+                            if jogador[0] == message['id']:
+                                for _, addr_jogador, _ in self.jogadores:
+                                    if addr_jogador != addr:
+                                        self.socket.sendto(json.dumps({
+                                            'type': 'respawn',
+                                            'id': message['id'],
+                                            'data': message['data']
+                                        }).encode(), addr_jogador)
+                                break
+                        else:
+                            print(f"Jogador não encontrado: {addr}")
 
-                # Atualiza o semáforo
+                # Atualiza o semáforo e o fogo e o elevador
                 current_time = time.time()
                 if current_time - self.last_update >= 1/30:  # Atualiza a cada ~33ms (30 FPS)
+                    # Atualiza o semáforo
                     self.animation_timer += 1
                     if self.animation_timer >= self.animation_interval:
                         if self.semaphore_color == 1:
@@ -162,6 +181,52 @@ class Server:
                                     'semaphore_color': self.semaphore_color
                                 }
                             }).encode(), addr_jogador)
+
+                    # Atualiza o fogo no nível 2-3
+                    self.fire_timer += 1
+                    if self.fire_timer >= self.fire_interval:
+                        self.fire_visible = not self.fire_visible
+                        self.fire_timer = 0
+                        # Envia atualização do fogo para todos os jogadores
+                        for _, addr_jogador, _ in self.jogadores:
+                            self.socket.sendto(json.dumps({
+                                'type': 'fire_update',
+                                'data': {
+                                    'level': 'level2_3',
+                                    'is_visible': self.fire_visible
+                                }
+                            }).encode(), addr_jogador)
+
+                    # Atualiza a plataforma elevador no nível 2-3
+                    player_on_platform = False
+                    for player_id, pos in self.player_positions.items():
+                        if pos['level'] == 'level2_3':
+                            # Verifica se o jogador está na plataforma (x=158, width=48, y=elevator_y)
+                            if (pos['x'] + 12 > 158 and
+                                pos['x'] < 158 + 48 and
+                                abs(pos['y'] + 13 - self.elevator_y) < 4):  # Tolerância reduzida
+                                player_on_platform = True
+                                break
+
+                    if player_on_platform and self.elevator_y > self.elevator_max_y:
+                        self.elevator_y -= self.elevator_speed  # Sobe
+                        if self.elevator_y < self.elevator_max_y:
+                            self.elevator_y = self.elevator_max_y
+                    elif not player_on_platform and self.elevator_y < self.elevator_initial_y:
+                        self.elevator_y += self.elevator_speed  # Desce
+                        if self.elevator_y > self.elevator_initial_y:
+                            self.elevator_y = self.elevator_initial_y
+
+                    # Envia atualização da posição do elevador para todos os jogadores
+                    for _, addr_jogador, _ in self.jogadores:
+                        self.socket.sendto(json.dumps({
+                            'type': 'elevator_update',
+                            'data': {
+                                'level': 'level2_3',
+                                'y': self.elevator_y
+                            }
+                        }).encode(), addr_jogador)
+
                     self.last_update = current_time
 
         except KeyboardInterrupt:
