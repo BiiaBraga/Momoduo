@@ -1194,12 +1194,14 @@ class Level1_2:
             Item(150, 53, 12, 5, 90, 34, "key"),
             Item(250, 50, 16, 14, 72, 40, "door")
         ]
+        
         self.interactive_itens = [
             InteractiveItem(67, 61, 4, 2, 92, 45, "button1"),
             Item(66, 63, 6, 1, 91, 47),
             InteractiveItem(217, 61, 4, 2, 92, 45, "button1"),
             Item(216, 63, 6, 1, 91, 47)
         ]
+        
         self.camera = Camera()
         self.bridge_growth_speed = 5
         self.bridge_max_width = 110
@@ -1296,6 +1298,9 @@ class Level1_3:
             Platform(185, -14, 4, 24, 50, 0), # Plataforma 4 (vertical)
             Platform(256, 64, 0, 4, 120, 88), # Plataforma 5 (horizontal, ponte)
 
+            # Plataformas base das plataformas azuis
+            Platform(90, -62, 108, 48, 0, 120),  # Plataforma 1 (vertical)
+
             # Plataforma suspensa principal
             Platform(90, 10, 16, 14, 32, 0),
             Platform(106, 10, 16, 14, 32, 16),
@@ -1330,6 +1335,7 @@ class Level1_3:
             Item(166, 0, 12, 5, 90, 34, "key"),  # Chave
             Item(350, 50, 16, 14, 72, 40, "door")  # Porta
         ]
+        
         self.interactive_itens = [
             InteractiveItem(96, 61, 4, 2, 92, 45, "button2"),
             Item(95, 63, 6, 1, 91, 47),
@@ -1342,6 +1348,7 @@ class Level1_3:
             InteractiveItem(281, 33, 4, 2, 92, 45, "button6"),
             Item(280, 35, 6, 1, 91, 47)
         ]
+        
         self.camera = Camera()
         self.platform_speed = 2  # Velocidade de movimento das plataformas
         self.vertical_min_y = -14  # Posição elevada das plataformas verticais
