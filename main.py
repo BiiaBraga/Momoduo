@@ -35,6 +35,13 @@ class GameState:
         self.esta_level2_3 = False
         self.level_stopmove_achivied = False
 
+        self.esta_levels_pushjump = False
+        self.option_level_pushjump = 1
+        self.esta_level3_1 = False
+        self.esta_level3_2 = False
+        self.esta_level3_3 = False
+        self.level_pushjump_achivied = False
+
         self.semaphore_color = 1
 
         self.option_menu = 1
@@ -172,6 +179,27 @@ class Client:
                                 if platform.is_elevator and f"elevator_{platform.x}_{platform.initial_y}" == data['item_id']:
                                     platform.y = data['new_y']
                                     break
+                        elif data['level'] == "level3_1" and level3_1 is not None:
+                            for item in level3_1.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                            for platform in level3_1.platforms:
+                                if platform.is_elevator and f"elevator_{platform.x}_{platform.initial_y}" == data['item_id']:
+                                    platform.y = data['new_y']
+                                    break
+                        elif data['level'] == "level3_2" and level3_2 is not None:
+                            for item in level3_2.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                                    break
+                        elif data['level'] == "level3_3" and level3_3 is not None:
+                            for item in level3_3.itens:
+                                if item.id == data['item_id']:
+                                    item.x = data['new_x']
+                                    item.y = data['new_y']
+                                    break
                                 
                     elif message['type'] == 'event_button':
                         data = message['data']
@@ -234,6 +262,25 @@ class Client:
                             game_state.option_level_stopmove = 4
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
                             player.level = None
+                        elif level == "level3_1" and player.level == "level3_1":
+                            game_state.esta_level3_1 = False
+                            game_state.esta_levels_pushjump = True
+                            game_state.option_level_pushjump = 2
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
+                            player.level = "level3_2"
+                        elif level == "level3_2" and player.level == "level3_2":
+                            game_state.esta_level3_2 = False
+                            game_state.esta_levels_pushjump = True
+                            game_state.option_level_pushjump = 3
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
+                            player.level = "level3_3"
+                        elif level == "level3_3" and player.level == "level3_3":
+                            game_state.esta_level3_3 = False
+                            game_state.esta_levels_pushjump = True
+                            game_state.level_pushjump_achivied = True
+                            game_state.option_level_pushjump = 4
+                            player.x, player.y = WIDTH // 2, HEIGHT // 2
+                            player.level = None
 
                     elif message['type'] == 'semaphore_update':
                         data = message['data']
@@ -288,6 +335,25 @@ class Client:
                                         item.collected = False
                                         item.x = item.initial_x
                                         item.y = item.initial_y
+                            elif game_state.esta_level3_1 and level3_1:
+                                for item in level3_1.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+                            elif game_state.esta_level3_2 and level3_2:
+                                for item in level3_2.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+                            elif game_state.esta_level3_3 and level3_3:
+                                for item in level3_3.itens:
+                                    if item.id == "key":
+                                        item.collected = False
+                                        item.x = item.initial_x
+                                        item.y = item.initial_y
+
                         else:
                             for online_player in players_online:
                                 if online_player.id == player_id:
@@ -333,6 +399,24 @@ class Client:
                                                 item.collected = False
                                                 item.x = item.initial_x
                                                 item.y = item.initial_y
+                                    elif game_state.esta_level3_1 and level3_1:
+                                        for item in level3_1.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                    elif game_state.esta_level3_2 and level3_2:
+                                        for item in level3_2.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                    elif game_state.esta_level3_3 and level3_3:
+                                        for item in level3_3.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y                                 
                                     break
                     
                     elif message['type'] == 'elevator_update':
@@ -341,13 +425,26 @@ class Client:
                             self.player.level == 'level2_3' and 
                             level2_3 is not None):
                             for platform in level2_3.platforms:
-                                if platform.is_elevator and platform.x == 158:
+                                if platform.is_elevator:
                                     platform.y = data['y']
                                     if (self.player.x + self.player.width > platform.x and
                                         self.player.x < platform.x + platform.width and
-                                        abs(self.player.y + self.player.height - platform.y) < 4):
+                                        abs(self.player.y + self.player.height - platform.y) < 6):
                                         self.player.y = platform.y - self.player.height
-                                    break
+                                        self.player.on_floor = True
+                                        break
+                        if (data['level'] == 'level3_1' and 
+                            self.player.level == 'level3_1' and 
+                            level3_1 is not None):
+                            for platform in level3_1.platforms:
+                                if platform.is_elevator:
+                                    platform.y = data['y']
+                                    if (self.player.x + self.player.width > platform.x and
+                                        self.player.x < platform.x + platform.width and
+                                        abs(self.player.y + self.player.height - platform.y) < 6):
+                                        self.player.y = platform.y - self.player.height
+                                        self.player.on_floor = True
+                                        break
 
         except Exception as e:
             print(f"Erro no cliente: {e}")
@@ -468,10 +565,10 @@ class Player:
                     if platform.is_elevator and abs(platform.y - platform.max_y) < 0.01:
                         self.y = platform.y - self.height
                     break
-            # Verifica colisão com caixas (caixa1 e caixa2)
+            # Verifica colisão com caixas (caixa1)
             if not did_collide_with_floor:
                 for item in itens:
-                    if item.id in ["caixa1", "caixa2"] and collision_detect(self, item):
+                    if item.id and item.id.startswith("caixa") and collision_detect(self, item):  # Check if item.id is not None
                         self.on_floor = True
                         did_collide_with_floor = True
                         self.y = item.y - self.height
@@ -489,6 +586,7 @@ class Player:
         # Verifica se caiu abaixo da tela
         if self.y >= HEIGHT:
             self.respawn()
+            client.send_event_respawn(self.id, self.x, self.y)
 
         # Pulo
         if btnp(KEY_UP) and self.on_floor:
@@ -501,30 +599,29 @@ class Player:
             for _ in range(self.speed):
                 previous_x = self.x
                 self.x -= 1
-                # Verifica colisão com a caixa1 e tenta empurrá-la
                 for item in itens:
-                    if item.id == "caixa1" and collision_detect(self, item):
-                        # Tenta mover a caixa para a esquerda
+                    if item.id and item.id.startswith("caixa") and collision_detect(self, item):  # Check if item.id is not None
                         temp_item = Item(item.x - 1, item.y, item.width, item.height, item.xPyxel, item.yPyxel, item.id)
                         can_move = True
-                        # Verifica colisão da caixa com plataformas
                         for platform in platforms:
                             if collision_detect(temp_item, platform):
                                 can_move = False
                                 break
-                        # Verifica colisão da caixa com outros itens
                         for other_item in itens:
-                            if other_item != item and other_item.id in ["caixa2", "caixa1"]:
-                                if collision_detect(temp_item, other_item):
+                            if other_item != item and other_item.id and other_item.id.startswith("caixa"):  # Check if other_item.id is not None
+                                if collision_detect(temp_item, other_item) and (temp_item.x != other_item.x or temp_item.y != other_item.y):
                                     can_move = False
                                     break
+                        for online_player in players_online:
+                            if collision_detect(temp_item, online_player):
+                                can_move = False
+                                break
                         if can_move:
-                            item.x -= 1  # Move a caixa
+                            item.x -= 1
                             client.send_level_update(self.level, item.id, item.x, item.y)
                         else:
-                            self.x = previous_x  # Bloqueia o jogador
-                            break
-                # Verifica colisão com plataformas e caixa2
+                            self.x = previous_x
+                        break
                 for platform in platforms:
                     if collision_detect(self, platform):
                         self.x = previous_x
@@ -533,8 +630,6 @@ class Player:
                     if item.id == "caixa2" and collision_detect(self, item):
                         self.x = previous_x
                         break
-                
-                # verifica colisão com outros jogadores
                 for player in players_online:
                     if collision_detect(self, player):
                         self.x = previous_x
@@ -546,30 +641,29 @@ class Player:
             for _ in range(self.speed):
                 previous_x = self.x
                 self.x += 1
-                # Verifica colisão com a caixa1 e tenta empurrá-la
                 for item in itens:
-                    if item.id == "caixa1" and collision_detect(self, item):
-                        # Tenta mover a caixa para a direita
+                    if item.id and item.id.startswith("caixa") and collision_detect(self, item):  # Check if item.id is not None
                         temp_item = Item(item.x + 1, item.y, item.width, item.height, item.xPyxel, item.yPyxel, item.id)
                         can_move = True
-                        # Verifica colisão da caixa com plataformas
                         for platform in platforms:
                             if collision_detect(temp_item, platform):
                                 can_move = False
                                 break
-                        # Verifica colisão da caixa com outros itens
                         for other_item in itens:
-                            if other_item != item and other_item.id in ["caixa2", "caixa1"]:
-                                if collision_detect(temp_item, other_item):
+                            if other_item != item and other_item.id and other_item.id.startswith("caixa"):  # Check if other_item.id is not None
+                                if collision_detect(temp_item, other_item) and (temp_item.x != other_item.x or temp_item.y != other_item.y):
                                     can_move = False
                                     break
+                        for online_player in players_online:
+                            if collision_detect(temp_item, online_player):
+                                can_move = False
+                                break
                         if can_move:
-                            item.x += 1  # Move a caixa
+                            item.x += 1
                             client.send_level_update(self.level, item.id, item.x, item.y)
                         else:
-                            self.x = previous_x  # Bloqueia o jogador
-                            break
-                # Verifica colisão com plataformas e caixa2
+                            self.x = previous_x
+                        break
                 for platform in platforms:
                     if collision_detect(self, platform):
                         self.x = previous_x
@@ -578,14 +672,11 @@ class Player:
                     if item.id == "caixa2" and collision_detect(self, item):
                         self.x = previous_x
                         break
-                
-                # verifica colisão com outros jogadores
                 for player in players_online:
                     if collision_detect(self, player):
                         self.x = previous_x
                         break
 
-        # Aplicar velocidade de pulo
         if self.upward_speed > 0:
             for _ in range(self.upward_speed):
                 previous_y = self.y
@@ -594,14 +685,13 @@ class Player:
                     if collision_detect(self, platform):
                         self.y = previous_y
                         break
-                # Verifica colisão com caixas durante o pulo
                 for item in itens:
-                    if item.id in ["caixa1", "caixa2"] and collision_detect(self, item):
+                    if item.id and item.id.startswith("caixa") and collision_detect(self, item):  # Check if item.id is not None
                         self.y = previous_y
-                        self.upward_speed = 0  # Para o pulo ao bater a cabeça na caixa
+                        self.upward_speed = 0
                         break
             self.upward_speed -= 1
-
+    
     def respawn(self):
         self.x = self.respawn_x
         self.y = self.respawn_y
@@ -639,6 +729,24 @@ class Player:
                     item.y = item.initial_y
         elif game_state.esta_level2_3 and level2_3:
             for item in level2_3.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level3_1 and level3_1:
+            for item in level3_1.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level3_2 and level3_2:
+            for item in level3_2.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level3_3 and level3_3:
+            for item in level3_3.itens:
                 if item.id == "key":
                     item.collected = False
                     item.x = item.initial_x
@@ -736,6 +844,24 @@ class PlayerOnline:
                     item.collected = False
                     item.x = item.initial_x
                     item.y = item.initial_y
+        elif game_state.esta_level3_1 and level3_1:
+            for item in level3_1.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level3_2 and level3_2:
+            for item in level3_2.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
+        elif game_state.esta_level3_3 and level3_3:
+            for item in level3_3.itens:
+                if item.id == "key":
+                    item.collected = False
+                    item.x = item.initial_x
+                    item.y = item.initial_y
 
     def draw(self, camera):
         screen_x = self.x - camera.x
@@ -775,9 +901,6 @@ class Platform:
         self.is_elevator = is_elevator
         self.max_y = y - 56 if is_elevator else y  # Plataforma sobe até 56 pixels acima da posição inicial
         self.speed = 0.5  # Velocidade de subida do elevador
-
-    def update_elevator(self, players, level_id, client):
-        pass
 
     def draw(self, camera):
         screen_x = self.x - camera.x
@@ -825,31 +948,88 @@ class Item:
             self.y = player.y - self.height - 5
             client.send_level_update(player.level, self.id, self.x, self.y)
 
-        if self.id == "caixa1":
-            # Verifica colisão com o jogador para mover a caixa
-            if self.check_collision(player) and player.andando:
-                if player.facing_right:
-                    self.x += 1  # Empurra para a direita
-                else:
-                    self.x -= 1  # Empurra para a esquerda
-            # Aplica gravidade
-            self.y += 1  # Simula gravidade
-            # Verifica colisão com plataformas (exemplo simplificado)
-            level = None
-            if player.level == "level2_2":
-                level = level2_2
-            if level:
-                for platform in level.platforms:
-                    if (self.x < platform.x + platform.width and
-                        self.x + self.width > platform.x and
-                        self.y + self.height > platform.y and
-                        self.y < platform.y + platform.height):
-                        self.y = platform.y - self.height  # Ajusta para ficar sobre a plataforma
+        #Aplica gravidade para caixas
+        if self.id and self.id.startswith("caixa") and not self.collected:
+            previous_y = self.y
+            self.y += 1  # Aplica gravidade (1 pixel por frame)
+            did_collide = False
+
+            # Determina o nível atual
+            current_level = None
+            level_name = None
+            if game_state.esta_level3_1:
+                current_level = level3_1
+                level_name = "level3_1"
+            elif game_state.esta_level2_2:
+                current_level = level2_2
+                level_name = "level2_2"
+            elif game_state.esta_level1_1:
+                current_level = level1_1
+                level_name = "level1_1"
+            elif game_state.esta_level1_2:
+                current_level = level1_2
+                level_name = "level1_2"
+            elif game_state.esta_level1_3:
+                current_level = level1_3
+                level_name = "level1_3"
+            elif game_state.esta_level2_1:
+                current_level = level2_1
+                level_name = "level2_1"
+            elif game_state.esta_level2_3:
+                current_level = level2_3
+                level_name = "level2_3"
+            elif game_state.esta_level3_2:
+                current_level = level3_2
+                level_name = "level3_2"
+            elif game_state.esta_level3_3:
+                current_level = level3_3
+                level_name = "level3_3"
+
+            if current_level:
+                # Verifica colisão com plataformas
+                for platform in current_level.platforms:
+                    if collision_detect(self, platform):
+                        did_collide = True
+                        self.y = platform.y - self.height
+                        # Se for um elevador, acompanha o movimento
+                        if platform.is_elevator and hasattr(platform, 'speed'):
+                            if platform.y < platform.initial_y:  # Elevador subindo
+                                self.y -= platform.speed
+                            elif platform.y > platform.initial_y:  # Elevador descendo
+                                self.y += platform.speed
                         break
 
-            # Envia atualização se a posição mudou
-            if self.x != previous_x or self.y != previous_y:
-                client.send_level_update(player.level, self.id, self.x, self.y)
+                # Verifica colisão com outras caixas
+                if not did_collide:
+                    for other_item in current_level.itens:
+                        if other_item != self and other_item.id and other_item.id.startswith("caixa") and not other_item.collected:
+                            if collision_detect(self, other_item):
+                                did_collide = True
+                                self.y = other_item.y - self.height
+                                break
+
+                # Verifica colisão com jogadores (local e online)
+                if not did_collide:
+                    if collision_detect(self, player):
+                        did_collide = True
+                        self.y = player.y - self.height
+                    for online_player in players_online:
+                        if collision_detect(self, online_player):
+                            did_collide = True
+                            self.y = online_player.y - self.height
+                            break
+
+                if not did_collide:
+                    # Continua caindo
+                    self.y = previous_y + 1  # Aplica a gravidade
+                else:
+                    # Mantém a posição ajustada pela colisão
+                    pass
+
+                if self.y != previous_y:
+                    # Sincroniza a nova posição com o servidor
+                    client.send_level_update(level_name, self.id, self.x, self.y)
+                    print(f"Caixa {self.id} atualizada para y={self.y} no nível {level_name}")
 
         # Animação do choque
         if self.id == "chock":
@@ -857,6 +1037,7 @@ class Item:
             if self.animation_timer >= self.animation_interval:
                 self.facing_up = not self.facing_up
                 self.animation_timer = 0
+        
         # Movimento da gosma
         if self.id == "gosma":
             if self.moving_right:
@@ -869,6 +1050,7 @@ class Item:
                 if self.x <= self.min_x:
                     self.x = self.min_x
                     self.moving_right = True
+        
         # Animação do fogo
         if self.id == "fire":
             self.fire_timer += 1
@@ -897,16 +1079,20 @@ class Item:
                 blt(screen_x, screen_y, 0, 11, 64, self.width, self.height, 1)
             else:
                 blt(screen_x, screen_y, 0, 0, 64, self.width, self.height, 1)
-        elif self.id == "gosma":
-            # Inverte o sprite horizontalmente se estiver movendo para a direita
-            sprite_width = self.width if not self.moving_right else -self.width
-            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, sprite_width, self.height, 1)
+        elif self.id == "key":
+            if not self.collected:
+                blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
+        elif self.id == "door":
+            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
+        elif self.id and self.id.startswith("caixa"):  # Check if self.id is not None
+            blt(screen_x, screen_y, 0, 72, 24, self.width, self.height, 1)
         elif self.id == "gosma":
             # Inverte o sprite horizontalmente se estiver movendo para a direita
             sprite_width = self.width if not self.moving_right else -self.width
             blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, sprite_width, self.height, 1)
         else:
-            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
+            # Handle items without an ID (e.g., flowers) or other cases
+            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 7)  # Use colorkey 7 for flowers
 
 class InteractiveItem:
     def __init__(self, x: int, y: int, width: int, height: int, xPyxel: int, yPyxel: int, id: str):
@@ -1350,13 +1536,11 @@ class Level2_1:
             # Respawn do jogador local
             player.respawn()
             client.send_event_respawn(player.id, player.x, player.y)  # Sincroniza respawn do jogador local
-            print("Jogador local reiniciado devido a movimento no vermelho.")
             
             # Respawn de todos os jogadores online
             for online_player in players_online:
                 online_player.respawn()
                 client.send_event_respawn(online_player.id, online_player.x, online_player.y)  # Sincroniza respawn
-                print(f"Jogador online {online_player.id} reiniciado devido a movimento no vermelho.")
 
     def draw(self):
 
@@ -1507,13 +1691,11 @@ class Level2_2:
             # Respawn do jogador local
             player.respawn()
             client.send_event_respawn(player.id, player.x, player.y)  # Sincroniza respawn do jogador local
-            print("Jogador local reiniciado devido a movimento no vermelho.")
-            
+         
             # Respawn de todos os jogadores online
             for online_player in players_online:
                 online_player.respawn()
                 client.send_event_respawn(online_player.id, online_player.x, online_player.y)  # Sincroniza respawn
-                print(f"Jogador online {online_player.id} reiniciado devido a movimento no vermelho.")
 
     def draw(self):
         for platform in self.platforms:
@@ -1652,13 +1834,11 @@ class Level2_3:
             # Respawn do jogador local
             player.respawn()
             client.send_event_respawn(player.id, player.x, player.y)  # Sincroniza respawn do jogador local
-            print("Jogador local reiniciado devido a movimento no vermelho.")
             
             # Respawn de todos os jogadores online
             for online_player in players_online:
                 online_player.respawn()
                 client.send_event_respawn(online_player.id, online_player.x, online_player.y)  # Sincroniza respawn
-                print(f"Jogador online {online_player.id} reiniciado devido a movimento no vermelho.")
 
         # Botão
         for item in self.interactive_itens:
@@ -1700,7 +1880,6 @@ class Level2_3:
         # Desenha o texto na posição ajustada
         text(2, 108, "Click B", 1)
         text(2, 114, "to back", 1)
-        text(2, 2, "3/3", 1)
 
         # Desenha o semáforo
         blt(66, 5, 0, 112, 49, 31, 12)
@@ -1710,6 +1889,432 @@ class Level2_3:
             blt(76, 5, 0, 128, 65, 11, 12)     #yellow
         elif game_state.semaphore_color == 3:
             blt(86, 5, 0, 144, 65, 11, 12)     #green
+
+class Level3_1:
+
+    def __init__(self):
+        self.platforms = [
+
+            #plataforma 1 - pré montanha
+            Platform(0, 64, 16, 14, 32, 0), Platform(16, 64, 16, 14, 32, 16), Platform(32, 64, 16, 14, 32, 16), 
+            Platform(48, 64, 16, 14, 32, 16), Platform(64, 64, 16, 14, 32, 16), Platform(80, 64, 16, 14, 32, 16),
+            Platform(96, 64, 16, 14, 32, 16), Platform(112, 64, 16, 14, 32, 16), Platform(128, 64, 16, 14, 32, 16), 
+            Platform(144, 64, 16, 14, 32, 16), Platform(160, 64, 16, 14, 32, 16), Platform(176, 64, 16, 14, 32, 16),
+            Platform(192, 64, 16, 14, 32, 16), 
+
+            # montanha 1 
+            Platform(208, 2, 16, 16, 24, 96), Platform(224, 2, 16, 16, 48, 96), Platform(240, 2, 16, 16, 48, 96), Platform(256, 2, 16, 16, 72, 96),
+            Platform(208, 18, 16, 16, 96, 96), Platform(224, 18, 16, 16, 72, 72), Platform(240, 18, 16, 16, 72, 72), Platform(256, 18, 16, 16, 96, 72), 
+            Platform(208, 34, 16, 16, 96, 96), Platform(224, 34, 16, 16, 72, 72), Platform(240, 34, 16, 16, 72, 72), Platform(256, 34, 16, 16, 96, 72),
+            Platform(208, 50, 16, 16, 96, 96), Platform(224, 50, 16, 16, 72, 72), Platform(240, 50, 16, 16, 72, 72), Platform(256, 50, 16, 16, 96, 72), 
+            Platform(208, 64, 16, 14, 24, 74), Platform(224, 64, 16, 14, 24, 74), Platform(240, 64, 16, 14, 24, 74), Platform(256, 64, 16, 14, 48, 74),
+            
+            #plataforma azul
+            Platform(158, 60, 48, 4, 120, 96, is_elevator=True),
+
+            #plataforma suspensa entre montanhas 1 e 2
+            Platform(334, 2, 16, 14, 32, 0), Platform(350, 2, 16, 14, 32, 16), Platform(366, 2, 16, 14, 32, 32), 
+
+            # montanha 2
+            Platform(431, 2, 16, 16, 24, 96),  Platform(447, 2, 16, 16, 48, 96),  Platform(463, 2, 16, 16, 72, 96),
+            Platform(431, 18, 16, 16, 96, 96), Platform(447, 18, 16, 16, 72, 72), Platform(463, 18, 16, 16, 96, 72), 
+            Platform(431, 34, 16, 16, 96, 96), Platform(447, 34, 16, 16, 72, 72), Platform(463, 34, 16, 16, 96, 72),
+            Platform(431, 50, 16, 16, 96, 96), Platform(447, 50, 16, 16, 72, 72), Platform(463, 50, 16, 16, 96, 72), 
+            Platform(431, 64, 16, 14, 0, 74),  Platform(447, 64, 16, 14, 24, 74), Platform(463, 64, 16, 14, 24, 74),
+
+            #plataforma entre montanhas 2 e 3
+            Platform(479, 64, 16, 16, 32, 16), Platform(495, 64, 16, 16, 32, 16), Platform(511, 64, 16, 16, 32, 16), 
+            Platform(527, 64, 16, 16, 32, 16), Platform(543, 64, 16, 16, 32, 16), Platform(559, 64, 16, 16, 32, 16),
+
+            #plataforma para teste do nivel 3_2
+            Platform(479, 2, 16, 16, 32, 16), Platform(495, 2, 16, 16, 32, 16), Platform(511, 2, 16, 16, 32, 16), 
+            Platform(527, 2, 16, 16, 32, 16), Platform(543, 2, 16, 16, 32, 16), Platform(559, 2, 16, 16, 32, 16),
+
+            # montanha 3
+            Platform(575, 2, 16, 16, 24, 96),  Platform(591, 2, 16, 16, 48, 96),  Platform(607, 2, 16, 16, 72, 96),
+            Platform(575, 18, 16, 16, 96, 96), Platform(591, 18, 16, 16, 72, 72), Platform(607, 18, 16, 16, 96, 72), 
+            Platform(575, 34, 16, 16, 96, 96), Platform(591, 34, 16, 16, 72, 72), Platform(607, 34, 16, 16, 96, 72),
+            Platform(575, 50, 16, 16, 96, 96), Platform(591, 50, 16, 16, 72, 72), Platform(607, 50, 16, 16, 96, 72), 
+            Platform(575, 64, 16, 14, 24, 74),  Platform(591, 64, 16, 14, 24, 74), Platform(607, 64, 16, 14, 48, 74),
+            
+        ]
+
+        self.itens = [
+
+            #flor vermelha
+            Item(100, 60, 5, 4, 90, 52), Item(250, -2, 5, 4, 90, 52), 
+            
+            #flor amarela
+            Item(228, -2, 5, 4, 98, 52), 
+
+            #chave e a porta
+            Item(440, -25, 12, 5, 90, 34, "key"),
+            Item(591, -12, 16, 14, 72, 40, "door"),
+
+            #choque
+            Item(272, 64, 9, 6, 0, 64, "chock"), Item(281, 64, 9, 6, 0, 64, "chock"), Item(290, 64, 9, 6, 0, 64, "chock"), 
+            Item(299, 64, 9, 6, 0, 64, "chock"), Item(308, 64, 9, 6, 0, 64, "chock"), Item(317, 64, 9, 6, 0, 64, "chock"),
+            Item(326, 64, 9, 6, 0, 64, "chock"), Item(335, 64, 9, 6, 0, 64, "chock"), Item(344, 64, 9, 6, 0, 64, "chock"),
+            Item(353, 64, 9, 6, 0, 64, "chock"), Item(362, 64, 9, 6, 0, 64, "chock"), Item(371, 64, 9, 6, 0, 64, "chock"), 
+            Item(380, 64, 9, 6, 0, 64, "chock"), Item(389, 64, 9, 6, 0, 64, "chock"), Item(398, 64, 9, 6, 0, 64, "chock"),
+            Item(407, 64, 9, 6, 0, 64, "chock"), Item(416, 64, 9, 6, 0, 64, "chock"), Item(425, 64, 6, 6, 0, 64, "chock"),
+
+            #Caixas
+            Item(510, 49, 12, 15, 72, 24, "caixa1"), Item(520, 34, 12, 15, 72, 24, "caixa2"), Item(530, 19, 12, 15, 72, 24, "caixa3"),
+            Item(540, 4, 12, 15, 72, 24, "caixa4"),
+
+        ]
+
+        self.camera = Camera()
+        self.bridge_growth_speed = 5
+        self.bridge_max_width = 110
+        self.bridge_min_width = 0
+
+    def update(self, player, game_state):
+        self.camera.update(player)
+        for item in self.itens:
+            item.update(player)
+            if item.id == "key" and not item.collected and item.check_collision(player):
+                item.collected = True
+            if item.id == "door" and item.check_collision(player):
+                for other_item in self.itens:
+                    if other_item.id == "key" and other_item.collected:
+                        game_state.esta_level3_1 = False
+                        game_state.esta_levels_stopmove = True
+                        game_state.option_level_stopmove = 3
+                        player.x, player.y = WIDTH // 2, HEIGHT // 2
+                        other_item.collected = False
+                        other_item.x, other_item.y = 440, -25
+                        client.send_event_door("level3_1")
+                        break
+            if item.id == "chock" and item.check_collision(player):
+                player.respawn()
+
+    def draw(self):
+        for platform in self.platforms:
+            platform.draw(self.camera)
+        for item in self.itens:
+            item.draw(self.camera)
+
+        # Desenha o texto na posição ajustada
+        text(2, 108, "Click B", 1)
+        text(2, 114, "to back", 1)
+
+class Level3_2:
+    def __init__(self):
+        self.platforms = [
+
+            #base inferior 1
+            Platform(0, 64, 16, 14, 32, 0), Platform(16, 64, 16, 14, 32, 16), Platform(32, 64, 16, 14, 32, 16), 
+            Platform(48, 64, 16, 14, 32, 16), Platform(64, 64, 16, 14, 32, 16), Platform(80, 64, 16, 14, 32, 16),
+            Platform(96, 64, 16, 14, 32, 16), Platform(112, 64, 16, 14, 32, 16), Platform(128, 64, 16, 14, 32, 16), 
+            Platform(144, 64, 16, 14, 32, 48), Platform(160, 64, 16, 14, 32, 48), Platform(176, 64, 16, 14, 32, 48),
+            Platform(192, 64, 16, 14, 32, 48), Platform(208, 64, 16, 14, 32, 48), Platform(224, 64, 16, 14, 32, 48), 
+            Platform(240, 64, 16, 14, 32, 48), 
+
+            #base inferior 2
+            Platform(384, 64, 16, 14, 32, 0), Platform(400, 64, 16, 14, 32, 16), Platform(416, 64, 16, 14, 32, 16), 
+            Platform(432, 64, 16, 14, 32, 16), Platform(448, 64, 16, 14, 32, 16), Platform(464, 64, 16, 14, 32, 16),  
+            Platform(480, 64, 16, 14, 32, 16), Platform(480, 64, 16, 14, 32, 16), Platform(496, 64, 16, 14, 32, 16), 
+            Platform(512, 64, 16, 14, 32, 16), Platform(528, 64, 16, 14, 32, 16), Platform(544, 64, 16, 14, 32, 16), 
+            Platform(560, 64, 16, 14, 32, 16), Platform(576, 64, 16, 14, 32, 16), Platform(592, 64, 16, 14, 32, 16), 
+            Platform(608, 64, 16, 14, 32, 16), Platform(624, 64, 16, 14, 32, 16), Platform(640, 64, 16, 14, 32, 16), 
+            Platform(652, 64, 16, 14, 32, 16),
+
+            # primeira montanha
+            Platform(144, 50, 16, 16, 24, 96), Platform(177, 34, 16, 16, 24, 96), Platform(192, 18, 16, 16, 24, 96),
+            Platform(208, 2, 16, 16, 24, 96), Platform(256, 2, 16, 16, 72, 96), Platform(160, 50, 16, 16, 48, 96), 
+            Platform(224, 2, 16, 16, 48, 96), Platform(240, 2, 16, 16, 48, 96), Platform(176, 50, 16, 16, 72, 72), 
+            Platform(192, 50, 16, 16, 72, 72), Platform(208, 50, 16, 16, 72, 72), Platform(224, 50, 16, 16, 72, 72), 
+            Platform(240, 50, 16, 16, 72, 72), Platform(192, 34, 16, 16, 72, 72), Platform(208, 34, 16, 16, 72, 72), 
+            Platform(208, 18, 16, 16, 72, 72), Platform(224, 34, 16, 16, 72, 72), Platform(224, 18, 16, 16, 72, 72), 
+            Platform(224, 34, 16, 16, 72, 72), Platform(240, 34, 16, 16, 72, 72), Platform(240, 18, 16, 16, 72, 72), 
+            Platform(256, 64, 16, 14, 48, 74), Platform(256, 18, 16, 16, 96, 72), Platform(256, 34, 16, 16, 96, 72), 
+            Platform(256, 50, 16, 16, 96, 72),
+
+            #base para pegar a caixa
+            Platform(620, 15, 16, 14, 0, 96), Platform(600, 5, 16, 14, 0, 96), 
+            Platform(548, -5, 16, 14, 32, 0), Platform(564, -5, 16, 14, 32, 16), Platform(580, -5, 16, 14, 32, 32),
+
+            #base final
+            Platform(668, 30, 16, 16, 24, 96), Platform(684, 30, 16, 16, 48, 96), Platform(700, 30, 16, 16, 48, 96), Platform(716, 30, 16, 16, 72, 96),
+            Platform(668, 46, 16, 16, 96, 96), Platform(684, 46, 16, 16, 72, 72), Platform(700, 46, 16, 16, 72, 72), Platform(716, 46, 16, 16, 96, 72),
+            Platform(668, 62, 16, 16, 24, 72), Platform(684, 62, 16, 16, 24, 72), Platform(700, 62, 16, 16, 24, 72), Platform(716, 62, 16, 16, 48, 72)
+            
+        ]
+
+        self.itens = [
+
+            #flor vermelha
+            Item(160, 46, 5, 4, 90, 52), Item(250, -2, 5, 4, 90, 52), 
+            
+            #flor amarela
+            Item(228, -2, 5, 4, 98, 52), 
+
+            #gosma que mata
+            Item(130, 58, 8, 6, 40, 66, "gosma"),
+
+            #chave e a porta
+            Item(440, -25, 12, 5, 90, 34, "key"),
+            Item(690, 16, 16, 14, 72, 40, "door"),
+
+            #choque
+            Item(272, 64, 9, 6, 0, 64, "chock"), Item(281, 64, 9, 6, 0, 64, "chock"), Item(290, 64, 9, 6, 0, 64, "chock"), 
+            Item(299, 64, 9, 6, 0, 64, "chock"), Item(308, 64, 9, 6, 0, 64, "chock"), Item(317, 64, 9, 6, 0, 64, "chock"),
+            Item(326, 64, 9, 6, 0, 64, "chock"), Item(335, 64, 9, 6, 0, 64, "chock"), Item(344, 64, 9, 6, 0, 64, "chock"),
+            Item(353, 64, 9, 6, 0, 64, "chock"), Item(362, 64, 9, 6, 0, 64, "chock"), Item(371, 64, 9, 6, 0, 64, "chock"), 
+            Item(380, 64, 4, 6, 0, 64, "chock"),
+
+            #trampolim
+            Item(420, 56, 9, 8, 24, 64, "trampoline"), Item(429, 56, 9, 8, 24, 64, "trampoline"), Item(438, 56, 9, 8, 24, 64, "trampoline"),
+            Item(447, 56, 9, 8, 24, 64, "trampoline"), Item(456, 56, 9, 8, 24, 64, "trampoline"), Item(465, 56, 9, 8, 24, 64, "trampoline"),    # posição estimada em cima da segunda plataforma
+
+            #Caixas
+             Item(550, -20, 12, 15, 72, 24, "caixa1")
+
+        ]
+        self.camera = Camera()
+        self.bridge_growth_speed = 2
+        self.bridge_max_width = 110
+        self.bridge_min_width = 0
+
+    def update(self, player, game_state):
+        self.camera.update(player)
+        for item in self.itens:
+            item.update(player)
+            if item.id == "key" and not item.collected and item.check_collision(player):
+                item.collected = True
+            if item.id == "door" and item.check_collision(player):
+                for other_item in self.itens:
+                    if other_item.id == "key" and other_item.collected:
+                        game_state.esta_level3_2 = False
+                        game_state.esta_levels_pushjump = True
+                        game_state.option_level_pushjump = 3
+                        player.x, player.y = WIDTH // 2, HEIGHT // 2
+                        other_item.collected = False
+                        other_item.x, other_item.y = 440, -25
+                        client.send_event_door("level3_2")
+                        break
+            if item.id == "gosma" and item.check_collision(player):
+                player.respawn()
+            if item.id == "chock" and item.check_collision(player):
+                player.respawn()
+            if item.id == "trampoline" and item.check_collision(player):
+                player.upward_speed = 15  # aumenta o valor pra um pulo mais forte
+
+    def draw(self):
+        for platform in self.platforms:
+            platform.draw(self.camera)
+        for item in self.itens:
+            item.draw(self.camera)
+
+        # Desenha o texto na posição ajustada
+        text(2, 108, "Click B", 1)
+        text(2, 114, "to back", 1)
+
+class Level3_3:
+    def __init__(self):
+        self.platforms = [
+            # Plataforma principal 1
+            Platform(0, 64, 16, 14, 32, 0),
+            Platform(16, 64, 16, 14, 32, 16),
+            Platform(32, 64, 16, 14, 32, 16),
+            Platform(48, 64, 16, 14, 32, 16),
+            Platform(64, 64, 16, 14, 32, 16),
+            Platform(80, 64, 16, 14, 32, 16),
+            Platform(96, 64, 16, 14, 32, 16),
+            Platform(112, 64, 16, 14, 32, 16),
+            Platform(128, 64, 16, 14, 32, 16),
+            Platform(144, 64, 16, 14, 32, 16),
+            Platform(160, 64, 16, 14, 32, 16),
+            Platform(176, 64, 16, 14, 32, 16),
+            Platform(192, 64, 16, 14, 32, 16),
+            Platform(208, 64, 16, 14, 32, 16),
+            Platform(224, 64, 16, 14, 32, 16),
+            Platform(240, 64, 16, 14, 32, 32),
+
+            # Plataforma principal 2
+            Platform(388, 64, 16, 14, 32, 0),
+            Platform(404, 64, 16, 14, 32, 16),
+            Platform(420, 64, 16, 14, 32, 16),
+            Platform(436, 64, 16, 14, 32, 16),
+            Platform(452, 64, 16, 14, 32, 16),
+            Platform(468, 64, 16, 14, 32, 16),
+            Platform(484, 64, 16, 14, 32, 16),
+            Platform(500, 64, 16, 14, 32, 16),
+            Platform(516, 64, 16, 14, 32, 32),
+
+            # Plataformas azuis verticais
+            Platform(256, 64, 0, 4, 120, 80), # Plataforma 5 (horizontal, ponte)
+            
+        ]
+
+        self.itens = [
+            Item(10, 60, 5, 4, 90, 52),  # Flor vermelha
+            Item(50, 60, 5, 4, 90, 52),
+            Item(30, 60, 5, 4, 98, 52),  # Flor amarela
+            Item(70, 60, 5, 4, 98, 52),
+            Item(166, 20, 12, 5, 90, 34, "key"),  # Chave
+            Item(500, 50, 16, 14, 72, 40, "door")  # Porta
+        ]
+        
+        self.interactive_itens = [
+            InteractiveItem(96, 61, 4, 2, 92, 45, "button8"),
+            Item(95, 63, 6, 1, 91, 47),
+            InteractiveItem(126, 61, 4, 2, 92, 45, "button9"),
+            Item(125, 63, 6, 1, 91, 47),
+            InteractiveItem(156, 61, 4, 2, 92, 45, "button10"),
+            Item(155, 63, 6, 1, 91, 47),
+            InteractiveItem(186, 61, 4, 2, 92, 45, "button11"),
+            Item(185, 63, 6, 1, 91, 47),
+            InteractiveItem(216, 61, 4, 2, 92, 45, "button12"),
+            Item(215, 63, 6, 1, 91, 47),
+            InteractiveItem(246, 61, 4, 2, 92, 45, "button13"),
+            Item(245, 63, 6, 1, 91, 47),
+            InteractiveItem(407, 61, 4, 2, 92, 45, "button14"),
+            Item(406, 63, 6, 1, 91, 47),
+            InteractiveItem(437, 61, 4, 2, 92, 45, "button15"),
+            Item(436, 63, 6, 1, 91, 47)
+        ]
+
+        self.camera = Camera()
+        self.platform_speed = 2  # Velocidade de movimento das plataformas
+        self.vertical_min_y = -14  # Posição elevada das plataformas verticais
+        self.vertical_max_y = 64   # Posição descida das plataformas verticais
+        self.bridge_growth_speed = 2  # Velocidade de crescimento da ponte
+        self.bridge_max_width = 110    # Largura máxima da ponte
+        self.bridge_min_width = 0     # Largura mínima da ponte
+
+    def update(self, player, game_state):
+        self.camera.update(player)
+        
+        # Atualiza itens (chave, porta, etc.)
+        for item in self.itens:
+            item.update(player)
+            if item.id == "key" and not item.collected and item.check_collision(player):
+                item.collected = True
+            if item.id == "door" and item.check_collision(player):
+                for other_item in self.itens:
+                    if other_item.id == "key" and other_item.collected:
+                        game_state.esta_level3_3 = False
+                        game_state.level_pushjump_achivied = True
+                        game_state.esta_levels_pushjump = True
+                        game_state.option_level_pushjump = 4
+                        player.x, player.y = WIDTH // 2, HEIGHT // 2
+                        other_item.collected = False
+                        other_item.x, other_item.y = 166, 0
+                        client.send_event_door("level3_3")
+                        break
+
+        # Atualiza estado dos botões
+        for item in self.interactive_itens:
+            if isinstance(item, InteractiveItem):
+                item.is_active = item.check_collision(player)
+                
+                if not item.is_active:
+                    for online_player in players_online:
+                        if item.check_collision(online_player):
+                            item.is_active = True
+                            break
+
+        # Mapeia botões às plataformas
+        button_to_platform = {
+            "button8": None,    # Morte
+            "button9": None,    # Morte
+            "button10": None,   # Morte
+            "button11": self.platforms[24],   # Plataforma (ponte)
+            "button12": None,   # Morte
+            "button13": None,   # Morte
+            "button14": self.platforms[24],   # Plataforma (ponte) 
+            "button15": None,   # Morte
+        }
+
+        #Atualiza botões interativos e verifica colisões
+        for item in self.interactive_itens:
+            if isinstance(item, InteractiveItem):
+                previous_active = item.is_active
+                # Verifica colisão com o jogador local
+                item.is_active = item.check_collision(player)
+                if item.is_active != previous_active:
+                    client.send_event_button("level3_3", item.id, item.is_active)
+                # Verifica colisão com jogadores online
+                if not item.is_active:
+                    for online_player in players_online:
+                        if item.check_collision(online_player):
+                            item.is_active = True
+                            if item.is_active != previous_active:
+                                client.send_event_button("level3_3", item.id, item.is_active)
+                            break
+
+        # Atualiza plataforma (self.platforms[25])
+        platform = self.platforms[25]
+        previous_width = platform.width
+        bridge_max_width = 100  # Ajuste conforme necessário
+        bridge_min_width = 0   # Ajuste conforme necessário
+        bridge_growth_speed = 2 # Ajuste conforme necessário
+        button_active = any(
+            item.is_active and item.id in ["button11", "button14"]
+            for item in self.interactive_itens
+            if isinstance(item, InteractiveItem)
+        )
+        if button_active:
+            if platform.width < bridge_max_width:
+                platform.width += bridge_growth_speed
+                if platform.width > bridge_max_width:
+                    platform.width = bridge_max_width
+        else:
+            if platform.width > bridge_min_width:
+                platform.width -= bridge_growth_speed
+                if platform.width < bridge_min_width:
+                    platform.width = bridge_min_width
+        if platform.width != previous_width:
+            client.send_level_update("level3_3", f"bridge_{platform.x}_{platform.initial_y}", platform.x, platform.width)
+
+        # Verifica botões de morte
+        trigger_respawn = False    # Verifica se qualquer jogador está em cima de um botão de morte
+        death_buttons = ["button8", "button9", "button10", "button12", "button13", "button15"]
+        for item in self.interactive_itens:
+            if isinstance(item, InteractiveItem) and item.id in death_buttons:
+                if item.check_collision(player):
+                    trigger_respawn = True
+                    break
+                for online_player in players_online:
+                    if item.check_collision(online_player):
+                        trigger_respawn = True
+
+        # Aplica respawn a todos os jogadores se necessário
+        if trigger_respawn:
+            # Respawn do jogador local
+            player.respawn()
+            client.send_event_respawn(player.id, player.x, player.y)  # Sincroniza respawn do jogador local
+            
+            # Respawn de todos os jogadores online
+            for online_player in players_online:
+                online_player.respawn()
+                client.send_event_respawn(online_player.id, online_player.x, online_player.y)  # Sincroniza respawn
+
+    def draw(self):
+        for platform in self.platforms:
+            platform.draw(self.camera)
+        for item in self.itens:
+            item.draw(self.camera)
+        for item in self.interactive_itens:
+            item.draw(self.camera)
+        
+        # Desenha o texto na posição ajustada
+        text(2, 108, "Click B", 1)
+        text(2, 114, "to back", 1)
+
+        # Define a posição fixa do texto no mundo do jogo
+        text_world_x = -60  # Posição x no mundo
+        text_world_y = 50  # Posição y no mundo
+        # Ajusta a posição do texto com base na câmera
+        screen_x = text_world_x - self.camera.x
+        screen_y = text_world_y - self.camera.y
+
+        # Desenha o texto na posição ajustada
+        text(screen_x, screen_y, "Search the", 1)
+        text(screen_x+8, screen_y+10, "real button!", 1)
 
 def collision_detect(a, b):
     return not (
@@ -1745,9 +2350,12 @@ level1_3 = None
 level2_1 = None
 level2_2 = None
 level2_3 = None
+level3_1 = None
+level3_2 = None
+level3_3 = None
 
 def update():
-    global game_state, level1_1, level1_2, level1_3, level2_1, level2_2, level2_3
+    global game_state, level1_1, level1_2, level1_3, level2_1, level2_2, level2_3, level3_1, level3_2, level3_3
 
     if game_state.esta_menu:
         if btnp(KEY_RIGHT) and game_state.option_menu < 3:
@@ -1827,9 +2435,9 @@ def update():
         
         if game_state.pode_selecionar and btnp(KEY_SPACE) and game_state.option_level == 2:
             game_state.esta_levels = False
-            game_state.esta_levels_stopmove = True
+            game_state.esta_levels_pushjump = True
             player.level = None
-            game_state.option_level_stopmove == 1
+            game_state.option_level_pushjump == 1
 
         if game_state.pode_selecionar and btnp(KEY_B):
             load("Intro.pyxres")
@@ -2067,8 +2675,102 @@ def update():
                 player.level = None
                 game_state.option_level_stopmove = 1
 
+    # push and jump
+    if game_state.esta_levels_pushjump:
+        
+            load("player.pyxres")
+            if game_state.option_level_pushjump == 1:
+                level3_1 = Level3_1()
+                game_state.esta_levels_pushjump= False
+                game_state.esta_level3_1 = True
+                player.x = 0 + (player.id * 13 if player.id is not None else 0)
+                player.y = 64 - PLAYER_SPRITE_HEIGHT
+                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                player.respawn_y = 50
+                player.level = 'level3_1'
+            elif game_state.option_level_pushjump == 2:
+                level3_2 = Level3_2()
+                game_state.esta_levels_pushjump = False
+                game_state.esta_level3_2 = True
+                player.x = 0 + (player.id * 13 if player.id is not None else 0)
+                player.y = 64 - PLAYER_SPRITE_HEIGHT
+                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                player.respawn_y = 50
+                player.level = 'level3_2'
+            elif game_state.option_level_pushjump == 3:
+                level3_3 = Level3_3()
+                game_state.esta_levels_pushjump = False
+                game_state.esta_level3_3 = True
+                player.x = 0 + (player.id * 13 if player.id is not None else 0)
+                player.y = 64 - PLAYER_SPRITE_HEIGHT
+                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                player.respawn_y = 50
+                player.level = 'level3_3'
+            elif game_state.option_level_pushjump == 4:
+                load("levels.pyxres")
+                game_state.esta_levels_pushjump = False
+                game_state.esta_levels = True
+                game_state.option_level = 0
+                game_state.pode_selecionar = False
+                player.level = None
+                game_state.option_level_pushjump = 1
+
+    if game_state.esta_level3_1:
+        if btnp(KEY_R):
+            player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
+        player.update(level3_1.platforms, level3_1.itens, players_online)
+        level3_1.update(player, game_state)  # Passa player e game_state
+
+        if not btn(KEY_SPACE):
+            game_state.pode_selecionar = True
+
+        if game_state.pode_selecionar and btnp(KEY_B):
+                load("levels.pyxres")
+                game_state.esta_level3_1 = False
+                game_state.esta_levels = True
+                game_state.option_level = 0
+                game_state.pode_selecionar = False
+                player.level = None
+                game_state.option_level_pushjump = 1
+
+    if game_state.esta_level3_2:
+        if btnp(KEY_R):
+            player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
+        player.update(level3_2.platforms, level3_2.itens, players_online)
+        level3_2.update(player, game_state)  # Passa player e game_state
+
+        if not btn(KEY_SPACE):
+            game_state.pode_selecionar = True
+
+        if game_state.pode_selecionar and btnp(KEY_B):
+                load("levels.pyxres")
+                game_state.esta_level3_2 = False
+                game_state.esta_levels = True
+                game_state.option_level = 0
+                game_state.pode_selecionar = False
+                player.level = None
+                game_state.option_level_pushjump = 1
+
+    if game_state.esta_level3_3:
+        if btnp(KEY_R):
+            player.x, player.y = WIDTH // 2, 64 - PLAYER_SPRITE_HEIGHT
+        player.update(level3_3.platforms, level3_3.itens, players_online)
+        level3_3.update(player, game_state)  # Passa player e game_state
+
+        if not btn(KEY_SPACE):
+            game_state.pode_selecionar = True
+
+        if game_state.pode_selecionar and btnp(KEY_B):
+                load("levels.pyxres")
+                game_state.esta_level3_3 = False
+                game_state.esta_levels = True
+                game_state.option_level = 0
+                game_state.pode_selecionar = False
+                player.level = None
+                game_state.option_level_pushjump = 1
+
     # Manda para o servidor a posição do player
-    if game_state.esta_level1_1 or game_state.esta_level1_2 or game_state.esta_level1_3 or game_state.esta_level2_1 or game_state.esta_level2_2 or game_state.esta_level2_3:
+    if game_state.esta_level1_1 or game_state.esta_level1_2 or game_state.esta_level1_3 or game_state.esta_level2_1 or game_state.esta_level2_2 or game_state.esta_level2_3 or game_state.esta_level3_1 or game_state.esta_level3_2 or game_state.esta_level3_3:
         client.send_position(player.x, player.y, player.color, player.andando, player.level, player.facing_right)
 
 def draw():
@@ -2167,6 +2869,40 @@ def draw():
         # Desenha o nome do nivel
         text(2, 2, "3/3", 1)
 
+    if game_state.esta_level3_1:
+        level3_1.draw()
+        player.draw(level3_1.camera)
+
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level3_1.camera)
+
+        # Desenha o nome do nivel
+        text(2, 2, "1/3", 1)
+    
+    if game_state.esta_level3_2:
+        level3_2.draw()
+        player.draw(level3_2.camera)
+
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level3_2.camera)
+
+        # Desenha o nome do nivel
+        text(2, 2, "2/3", 1)
+
+    if game_state.esta_level3_3:
+        level3_3.draw()
+        player.draw(level3_3.camera)
+
+        for player_online in players_online:
+            if player_online.level == player.level:
+                player_online.draw(level3_3.camera)
+        
+        # Desenha o nome do nivel
+        text(2, 2, "3/3", 1)
+
+
 load("Intro.pyxres")
-sounds = PyxelSounds()
+#sounds = PyxelSounds()
 run(update, draw)

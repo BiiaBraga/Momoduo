@@ -23,7 +23,7 @@ class Server:
         self.fire_interval = 60  # 2 segundos a 30 FPS (30 frames/seg * 2 seg = 60 frames)
 
         # Atributos para a plataforma elevador no nível 2-3
-        self.elevator_y = 60  # Posição inicial (y=60, conforme definido em Level2_3)
+        self.elevator_y = 60  
         self.elevator_initial_y = 60
         self.elevator_max_y = 4  # 60 - 56 = 4 (56 pixels acima, conforme Platform.max_y)
         self.elevator_speed = 0.5  # Aumentar velocidade para movimento mais fluido (era 0.5)
@@ -197,14 +197,14 @@ class Server:
                                 }
                             }).encode(), addr_jogador)
 
-                    # Atualiza a plataforma elevador no nível 2-3
+                    # Atualiza a plataforma elevador nos níveis 2-3 e 3-1
                     player_on_platform = False
                     for player_id, pos in self.player_positions.items():
-                        if pos['level'] == 'level2_3':
+                        if pos['level'] in ['level2_3', 'level3_1']:
                             # Verifica se o jogador está na plataforma (x=158, width=48, y=elevator_y)
                             if (pos['x'] + 12 > 158 and
                                 pos['x'] < 158 + 48 and
-                                abs(pos['y'] + 13 - self.elevator_y) < 4):  # Tolerância reduzida
+                                abs(pos['y'] + 13 - self.elevator_y) < 6):  # Tolerância aumentada
                                 player_on_platform = True
                                 break
 
@@ -219,13 +219,14 @@ class Server:
 
                     # Envia atualização da posição do elevador para todos os jogadores
                     for _, addr_jogador, _ in self.jogadores:
-                        self.socket.sendto(json.dumps({
-                            'type': 'elevator_update',
-                            'data': {
-                                'level': 'level2_3',
-                                'y': self.elevator_y
-                            }
-                        }).encode(), addr_jogador)
+                        for level in ['level2_3', 'level3_1']:
+                            self.socket.sendto(json.dumps({
+                                'type': 'elevator_update',
+                                'data': {
+                                    'level': level,
+                                    'y': self.elevator_y
+                                }
+                            }).encode(), addr_jogador)
 
                     self.last_update = current_time
 
@@ -255,8 +256,8 @@ class Server:
         print("Servidor parado.")
 
 if __name__ == "__main__":
-    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão  192.168.1.12): ")
-    host = host if host else '192.168.1.12'
+    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão  192.168.1.11): ")
+    host = host if host else '192.168.1.11'
 
     port = input("Digite a porta do servidor (ou pressione Enter para usar o padrão 12345): ")
     port = int(port) if port else 12345
