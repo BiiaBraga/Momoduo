@@ -193,6 +193,9 @@ class Client:
                                 if item.id == data['item_id']:
                                     item.x = data['new_x']
                                     item.y = data['new_y']
+                            for platform in level3_2.platforms:
+                                if platform.is_elevator and f"elevator_{platform.x}_{platform.initial_y}" == data['item_id']:
+                                    platform.y = data['new_y']
                                     break
                         elif data['level'] == "level3_3" and level3_3 is not None:
                             for item in level3_3.itens:
@@ -425,7 +428,7 @@ class Client:
                             self.player.level == 'level2_3' and 
                             level2_3 is not None):
                             for platform in level2_3.platforms:
-                                if platform.is_elevator:
+                                if platform.is_elevator and platform.x == data['x']:  # Verifica a posição x
                                     platform.y = data['y']
                                     if (self.player.x + self.player.width > platform.x and
                                         self.player.x < platform.x + platform.width and
@@ -437,7 +440,19 @@ class Client:
                             self.player.level == 'level3_1' and 
                             level3_1 is not None):
                             for platform in level3_1.platforms:
-                                if platform.is_elevator:
+                                if platform.is_elevator and platform.x == data['x']:  # Verifica a posição x
+                                    platform.y = data['y']
+                                    if (self.player.x + self.player.width > platform.x and
+                                        self.player.x < platform.x + platform.width and
+                                        abs(self.player.y + self.player.height - platform.y) < 6):
+                                        self.player.y = platform.y - self.player.height
+                                        self.player.on_floor = True
+                                        break
+                        if (data['level'] == 'level3_2' and 
+                            self.player.level == 'level3_2' and 
+                            level3_2 is not None):
+                            for platform in level3_2.platforms:
+                                if platform.is_elevator and platform.x == data['x']:  # Verifica a posição x
                                     platform.y = data['y']
                                     if (self.player.x + self.player.width > platform.x and
                                         self.player.x < platform.x + platform.width and
@@ -905,10 +920,7 @@ class Platform:
     def draw(self, camera):
         screen_x = self.x - camera.x
         screen_y = int(self.y - camera.y)  # Arredonda para evitar artefatos
-        if self.is_elevator:
-            blt(screen_x, screen_y, 0, 120, 96, self.width, self.height, 1)  # Sprite azul
-        else:
-            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
+        blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
 
 class Item:
     def __init__(self, x: int, y: int, width: int, height: int, xPyxel: int, yPyxel: int, id: str = None):
@@ -1980,8 +1992,8 @@ class Level3_1:
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
                         game_state.esta_level3_1 = False
-                        game_state.esta_levels_stopmove = True
-                        game_state.option_level_stopmove = 3
+                        game_state.esta_levels_pushjump = True
+                        game_state.option_level_pushjump = 2
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 440, -25
@@ -2004,73 +2016,61 @@ class Level3_2:
     def __init__(self):
         self.platforms = [
 
-            #base inferior 1
+            #plataforma 1 - pré montanha
             Platform(0, 64, 16, 14, 32, 0), Platform(16, 64, 16, 14, 32, 16), Platform(32, 64, 16, 14, 32, 16), 
             Platform(48, 64, 16, 14, 32, 16), Platform(64, 64, 16, 14, 32, 16), Platform(80, 64, 16, 14, 32, 16),
             Platform(96, 64, 16, 14, 32, 16), Platform(112, 64, 16, 14, 32, 16), Platform(128, 64, 16, 14, 32, 16), 
-            Platform(144, 64, 16, 14, 32, 48), Platform(160, 64, 16, 14, 32, 48), Platform(176, 64, 16, 14, 32, 48),
-            Platform(192, 64, 16, 14, 32, 48), Platform(208, 64, 16, 14, 32, 48), Platform(224, 64, 16, 14, 32, 48), 
-            Platform(240, 64, 16, 14, 32, 48), 
+            Platform(144, 64, 16, 14, 32, 16), Platform(160, 64, 16, 14, 32, 16), Platform(176, 64, 16, 14, 32, 16),
+            Platform(192, 64, 16, 14, 32, 16), 
 
-            #base inferior 2
-            Platform(384, 64, 16, 14, 32, 0), Platform(400, 64, 16, 14, 32, 16), Platform(416, 64, 16, 14, 32, 16), 
-            Platform(432, 64, 16, 14, 32, 16), Platform(448, 64, 16, 14, 32, 16), Platform(464, 64, 16, 14, 32, 16),  
-            Platform(480, 64, 16, 14, 32, 16), Platform(480, 64, 16, 14, 32, 16), Platform(496, 64, 16, 14, 32, 16), 
-            Platform(512, 64, 16, 14, 32, 16), Platform(528, 64, 16, 14, 32, 16), Platform(544, 64, 16, 14, 32, 16), 
-            Platform(560, 64, 16, 14, 32, 16), Platform(576, 64, 16, 14, 32, 16), Platform(592, 64, 16, 14, 32, 16), 
-            Platform(608, 64, 16, 14, 32, 16), Platform(624, 64, 16, 14, 32, 16), Platform(640, 64, 16, 14, 32, 16), 
-            Platform(652, 64, 16, 14, 32, 16),
+            # montanha 1 
+            Platform(208, 18, 16, 16, 24, 96), Platform(224, 18, 16, 16, 48, 96), Platform(240, 18, 16, 16, 48, 96), Platform(256, 18, 16, 16, 72, 96), 
+            Platform(208, 34, 16, 16, 96, 96), Platform(224, 34, 16, 16, 72, 72), Platform(240, 34, 16, 16, 72, 72), Platform(256, 34, 16, 16, 96, 72),
+            Platform(208, 50, 16, 16, 96, 96), Platform(224, 50, 16, 16, 72, 72), Platform(240, 50, 16, 16, 72, 72), Platform(256, 50, 16, 16, 96, 72), 
+            Platform(208, 64, 16, 14, 24, 74), Platform(224, 64, 16, 14, 24, 74), Platform(240, 64, 16, 14, 24, 74), Platform(256, 64, 16, 14, 48, 74),
 
-            # primeira montanha
-            Platform(144, 50, 16, 16, 24, 96), Platform(177, 34, 16, 16, 24, 96), Platform(192, 18, 16, 16, 24, 96),
-            Platform(208, 2, 16, 16, 24, 96), Platform(256, 2, 16, 16, 72, 96), Platform(160, 50, 16, 16, 48, 96), 
-            Platform(224, 2, 16, 16, 48, 96), Platform(240, 2, 16, 16, 48, 96), Platform(176, 50, 16, 16, 72, 72), 
-            Platform(192, 50, 16, 16, 72, 72), Platform(208, 50, 16, 16, 72, 72), Platform(224, 50, 16, 16, 72, 72), 
-            Platform(240, 50, 16, 16, 72, 72), Platform(192, 34, 16, 16, 72, 72), Platform(208, 34, 16, 16, 72, 72), 
-            Platform(208, 18, 16, 16, 72, 72), Platform(224, 34, 16, 16, 72, 72), Platform(224, 18, 16, 16, 72, 72), 
-            Platform(224, 34, 16, 16, 72, 72), Platform(240, 34, 16, 16, 72, 72), Platform(240, 18, 16, 16, 72, 72), 
-            Platform(256, 64, 16, 14, 48, 74), Platform(256, 18, 16, 16, 96, 72), Platform(256, 34, 16, 16, 96, 72), 
-            Platform(256, 50, 16, 16, 96, 72),
+            # montanha 2
+            Platform(330, 2, 16, 16, 24, 96),  Platform(346, 2, 16, 16, 48, 96),  Platform(362, 2, 16, 16, 48, 96),  Platform(378, 2, 16, 16, 72, 96),
+            Platform(330, 18, 16, 16, 96, 96), Platform(346, 18, 16, 16, 72, 72), Platform(362, 18, 16, 16, 72, 72), Platform(378, 18, 16, 16, 96, 72), 
+            Platform(330, 34, 16, 16, 96, 96), Platform(346, 34, 16, 16, 72, 72), Platform(362, 34, 16, 16, 72, 72), Platform(378, 34, 16, 16, 96, 72),
+            Platform(330, 50, 16, 16, 96, 96), Platform(346, 50, 16, 16, 72, 72), Platform(362, 50, 16, 16, 72, 72), Platform(378, 50, 16, 16, 96, 72), 
+            Platform(330, 64, 16, 14, 0, 74), Platform(346, 64, 16, 14, 24, 74), Platform(362, 64, 16, 14, 24, 74), Platform(378, 64, 16, 14, 48, 74),
 
-            #base para pegar a caixa
-            Platform(620, 15, 16, 14, 0, 96), Platform(600, 5, 16, 14, 0, 96), 
-            Platform(548, -5, 16, 14, 32, 0), Platform(564, -5, 16, 14, 32, 16), Platform(580, -5, 16, 14, 32, 32),
+            # montanha 3
+            Platform(458, 2, 16, 16, 24, 96),  Platform(474, 2, 16, 16, 48, 96),  Platform(490, 2, 16, 16, 48, 96),  Platform(506, 2, 16, 16, 72, 96),
+            Platform(458, 18, 16, 16, 96, 96), Platform(474, 18, 16, 16, 72, 72), Platform(490, 18, 16, 16, 72, 72), Platform(506, 18, 16, 16, 96, 72), 
+            Platform(458, 34, 16, 16, 96, 96), Platform(474, 34, 16, 16, 72, 72), Platform(490, 34, 16, 16, 72, 72), Platform(506, 34, 16, 16, 96, 72),
+            Platform(458, 50, 16, 16, 96, 96), Platform(474, 50, 16, 16, 72, 72), Platform(490, 50, 16, 16, 72, 72), Platform(506, 50, 16, 16, 96, 72), 
+            Platform(458, 64, 16, 14, 0, 74), Platform(474, 64, 16, 14, 24, 74), Platform(490, 64, 16, 14, 24, 74), Platform(506, 64, 16, 14, 48, 74),
 
-            #base final
-            Platform(668, 30, 16, 16, 24, 96), Platform(684, 30, 16, 16, 48, 96), Platform(700, 30, 16, 16, 48, 96), Platform(716, 30, 16, 16, 72, 96),
-            Platform(668, 46, 16, 16, 96, 96), Platform(684, 46, 16, 16, 72, 72), Platform(700, 46, 16, 16, 72, 72), Platform(716, 46, 16, 16, 96, 72),
-            Platform(668, 62, 16, 16, 24, 72), Platform(684, 62, 16, 16, 24, 72), Platform(700, 62, 16, 16, 24, 72), Platform(716, 62, 16, 16, 48, 72)
-            
+            # montanha 4
+            Platform(594, 2, 16, 16, 24, 96),  Platform(610, 2, 16, 16, 48, 96),  Platform(626, 2, 16, 16, 48, 96),  Platform(642, 2, 16, 16, 72, 96),
+            Platform(594, 18, 16, 16, 96, 96), Platform(610, 18, 16, 16, 72, 72), Platform(626, 18, 16, 16, 72, 72), Platform(642, 18, 16, 16, 96, 72), 
+            Platform(594, 34, 16, 16, 96, 96), Platform(610, 34, 16, 16, 72, 72), Platform(626, 34, 16, 16, 72, 72), Platform(642, 34, 16, 16, 96, 72),
+            Platform(594, 50, 16, 16, 96, 96), Platform(610, 50, 16, 16, 72, 72), Platform(626, 50, 16, 16, 72, 72), Platform(642, 50, 16, 16, 96, 72), 
+            Platform(594, 64, 16, 14, 0, 74), Platform(610, 64, 16, 14, 24, 74), Platform(626, 64, 16, 14, 24, 74), Platform(642, 64, 16, 14, 48, 74),
+
+            #plataforma rosa, que só funciona se os dois players estiverem em cima dela
+            Platform(277, 64, 48, 4, 120, 104, is_elevator=True),
+            Platform(402, 64, 48, 4, 120, 104, is_elevator=True),
+            Platform(534, 64, 48, 4, 120, 104, is_elevator=True),
         ]
 
         self.itens = [
 
             #flor vermelha
-            Item(160, 46, 5, 4, 90, 52), Item(250, -2, 5, 4, 90, 52), 
+            Item(160, 62, 5, 4, 90, 52), Item(250, 14, 5, 4, 90, 52), 
             
             #flor amarela
-            Item(228, -2, 5, 4, 98, 52), 
-
-            #gosma que mata
-            Item(130, 58, 8, 6, 40, 66, "gosma"),
+            Item(228, 14, 5, 4, 98, 52), 
 
             #chave e a porta
             Item(440, -25, 12, 5, 90, 34, "key"),
-            Item(690, 16, 16, 14, 72, 40, "door"),
-
-            #choque
-            Item(272, 64, 9, 6, 0, 64, "chock"), Item(281, 64, 9, 6, 0, 64, "chock"), Item(290, 64, 9, 6, 0, 64, "chock"), 
-            Item(299, 64, 9, 6, 0, 64, "chock"), Item(308, 64, 9, 6, 0, 64, "chock"), Item(317, 64, 9, 6, 0, 64, "chock"),
-            Item(326, 64, 9, 6, 0, 64, "chock"), Item(335, 64, 9, 6, 0, 64, "chock"), Item(344, 64, 9, 6, 0, 64, "chock"),
-            Item(353, 64, 9, 6, 0, 64, "chock"), Item(362, 64, 9, 6, 0, 64, "chock"), Item(371, 64, 9, 6, 0, 64, "chock"), 
-            Item(380, 64, 4, 6, 0, 64, "chock"),
-
-            #trampolim
-            Item(420, 56, 9, 8, 24, 64, "trampoline"), Item(429, 56, 9, 8, 24, 64, "trampoline"), Item(438, 56, 9, 8, 24, 64, "trampoline"),
-            Item(447, 56, 9, 8, 24, 64, "trampoline"), Item(456, 56, 9, 8, 24, 64, "trampoline"), Item(465, 56, 9, 8, 24, 64, "trampoline"),    # posição estimada em cima da segunda plataforma
+            Item(642, -12, 16, 14, 72, 40, "door"),
 
             #Caixas
-             Item(550, -20, 12, 15, 72, 24, "caixa1")
+            Item(100, 49, 12, 15, 72, 24, "caixa1"),
+            Item(215, 3, 12, 15, 72, 24, "caixa2")
 
         ]
         self.camera = Camera()
@@ -2095,12 +2095,6 @@ class Level3_2:
                         other_item.x, other_item.y = 440, -25
                         client.send_event_door("level3_2")
                         break
-            if item.id == "gosma" and item.check_collision(player):
-                player.respawn()
-            if item.id == "chock" and item.check_collision(player):
-                player.respawn()
-            if item.id == "trampoline" and item.check_collision(player):
-                player.upward_speed = 15  # aumenta o valor pra um pulo mais forte
 
     def draw(self):
         for platform in self.platforms:
@@ -2800,8 +2794,8 @@ def draw():
         if game_state.level_stopmove_achivied:
             blt(66, 62, game_state.option_level, 2, 134, 21, 17, 1)
 
-        #if game_state.level_other_achivied:
-        #    blt(93, 62, game_state.option_level, 2, 134, 21, 17, 1)
+        if game_state.level_pushjump_achivied:
+            blt(93, 62, game_state.option_level, 50, 134, 21, 17, 1)
 
     if game_state.esta_level1_1:
         level1_1.draw()
@@ -2901,7 +2895,6 @@ def draw():
         
         # Desenha o nome do nivel
         text(2, 2, "3/3", 1)
-
 
 load("Intro.pyxres")
 #sounds = PyxelSounds()

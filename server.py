@@ -22,12 +22,34 @@ class Server:
         self.fire_timer = 0  # Temporizador para o fogo
         self.fire_interval = 60  # 2 segundos a 30 FPS (30 frames/seg * 2 seg = 60 frames)
 
-        # Atributos para a plataforma elevador no nível 2-3
-        self.elevator_y = 60  
-        self.elevator_initial_y = 60
-        self.elevator_max_y = 4  # 60 - 56 = 4 (56 pixels acima, conforme Platform.max_y)
-        self.elevator_speed = 0.5  # Aumentar velocidade para movimento mais fluido (era 0.5)
-        self.player_positions = {}  # Armazena posições dos jogadores: {id: {'x': x, 'y': y, 'level': level}}
+        self.player_positions = {}  # Armazena posições dos jogadores: {id: {'x': x, 'y': y, 'level': level}}\
+
+        # Lista de elevadores para todos os níveis
+        self.elevators = [
+            # Elevador do nível 2-3
+            {
+                'x': 158, 'y': 60, 'initial_y': 60, 'max_y': 4, 'width': 48,
+                'speed': 0.5, 'level': 'level2_3', 'min_players': 1
+            },
+            # Elevador do nível 3-1
+            {
+                'x': 158, 'y': 60, 'initial_y': 60, 'max_y': 4, 'width': 48,
+                'speed': 0.5, 'level': 'level3_1', 'min_players': 1
+            },
+            # Elevadores do nível 3-2
+            {
+                'x': 277, 'y': 64, 'initial_y': 64, 'max_y': 8, 'width': 48,
+                'speed': 0.5, 'level': 'level3_2', 'min_players': 2
+            },
+            {
+                'x': 402, 'y': 64, 'initial_y': 64, 'max_y': 8, 'width': 48,
+                'speed': 0.5, 'level': 'level3_2', 'min_players': 2
+            },
+            {
+                'x': 534, 'y': 64, 'initial_y': 64, 'max_y': 8, 'width': 48,
+                'speed': 0.5, 'level': 'level3_2', 'min_players': 2
+            },
+        ]
 
     def start(self):
         try:
@@ -197,34 +219,35 @@ class Server:
                                 }
                             }).encode(), addr_jogador)
 
-                    # Atualiza a plataforma elevador nos níveis 2-3 e 3-1
-                    player_on_platform = False
-                    for player_id, pos in self.player_positions.items():
-                        if pos['level'] in ['level2_3', 'level3_1']:
-                            # Verifica se o jogador está na plataforma (x=158, width=48, y=elevator_y)
-                            if (pos['x'] + 12 > 158 and
-                                pos['x'] < 158 + 48 and
-                                abs(pos['y'] + 13 - self.elevator_y) < 6):  # Tolerância aumentada
-                                player_on_platform = True
-                                break
+                    # Atualiza os elevadores
+                    for elevator in self.elevators:
+                        players_on_platform = 0
+                        for player_id, pos in self.player_positions.items():
+                            if pos['level'] == elevator['level']:
+                                # Verifica se o jogador está na plataforma
+                                if (pos['x'] + 12 > elevator['x'] and
+                                    pos['x'] < elevator['x'] + elevator['width'] and
+                                    abs(pos['y'] + 13 - elevator['y']) < 6):
+                                    players_on_platform += 1
 
-                    if player_on_platform and self.elevator_y > self.elevator_max_y:
-                        self.elevator_y -= self.elevator_speed  # Sobe
-                        if self.elevator_y < self.elevator_max_y:
-                            self.elevator_y = self.elevator_max_y
-                    elif not player_on_platform and self.elevator_y < self.elevator_initial_y:
-                        self.elevator_y += self.elevator_speed  # Desce
-                        if self.elevator_y > self.elevator_initial_y:
-                            self.elevator_y = self.elevator_initial_y
+                        # Move o elevador se o número mínimo de jogadores estiver presente
+                        if players_on_platform >= elevator['min_players'] and elevator['y'] > elevator['max_y']:
+                            elevator['y'] -= elevator['speed']
+                            if elevator['y'] < elevator['max_y']:
+                                elevator['y'] = elevator['max_y']
+                        elif players_on_platform < elevator['min_players'] and elevator['y'] < elevator['initial_y']:
+                            elevator['y'] += elevator['speed']
+                            if elevator['y'] > elevator['initial_y']:
+                                elevator['y'] = elevator['initial_y']
 
-                    # Envia atualização da posição do elevador para todos os jogadores
-                    for _, addr_jogador, _ in self.jogadores:
-                        for level in ['level2_3', 'level3_1']:
+                        # Envia atualização do elevador para todos os jogadores
+                        for _, addr_jogador, _ in self.jogadores:
                             self.socket.sendto(json.dumps({
                                 'type': 'elevator_update',
                                 'data': {
-                                    'level': level,
-                                    'y': self.elevator_y
+                                    'level': elevator['level'],
+                                    'x': elevator['x'],  # Identifica o elevador pela posição x
+                                    'y': elevator['y']
                                 }
                             }).encode(), addr_jogador)
 
@@ -256,8 +279,8 @@ class Server:
         print("Servidor parado.")
 
 if __name__ == "__main__":
-    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão  192.168.1.11): ")
-    host = host if host else '192.168.1.11'
+    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão  192.168.1.13): ")
+    host = host if host else '192.168.1.13'
 
     port = input("Digite a porta do servidor (ou pressione Enter para usar o padrão 12345): ")
     port = int(port) if port else 12345
