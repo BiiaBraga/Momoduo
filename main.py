@@ -139,71 +139,32 @@ class Client:
                     
                     elif message['type'] == 'level_update':
                         data = message['data']
+                        level = data['level']
+                        item_id = data['item_id']
+                        level_instance = {
+                            "level1_1": level1_1,
+                            "level1_2": level1_2,
+                            "level1_3": level1_3,
+                            "level2_1": level2_1,
+                            "level2_2": level2_2,
+                            "level2_3": level2_3,
+                            "level3_1": level3_1,
+                            "level3_2": level3_2,
+                            "level3_3": level3_3
+                        }.get(level)
+                        if level_instance:
+                            for item in level_instance.itens:
+                                if item.id == item_id:
+                                    if item_id.startswith("caixa"):
+                                        item.x = data['new_x']
+                                        item.y = data['new_y']
+                                    elif item_id in ["key_picked", "key_dropped", "key"]:
+                                        item.x = data['new_x']
+                                        item.y = data['new_y']
+                                        item.collected = data['collected']
+                                        item.holder_id = data['holder_id']
+                                    break
 
-                        if data['level'] == "level1_1":
-                            for item in level1_1.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                                    break
-                        elif data['level'] == "level1_2":
-                            for item in level1_2.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                                    break
-                        elif data['level'] == "level1_3":
-                            for item in level1_3.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                                    break
-                        elif data['level'] == "level2_1":
-                            for item in level2_1.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                                    break
-                        elif data['level'] == "level2_2":
-                            for item in level2_2.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                                    break
-                        elif data['level'] == "level2_3":
-                            for item in level2_3.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                            for platform in level2_3.platforms:
-                                if platform.is_elevator and f"elevator_{platform.x}_{platform.initial_y}" == data['item_id']:
-                                    platform.y = data['new_y']
-                                    break
-                        elif data['level'] == "level3_1" and level3_1 is not None:
-                            for item in level3_1.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                            for platform in level3_1.platforms:
-                                if platform.is_elevator and f"elevator_{platform.x}_{platform.initial_y}" == data['item_id']:
-                                    platform.y = data['new_y']
-                                    break
-                        elif data['level'] == "level3_2" and level3_2 is not None:
-                            for item in level3_2.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                            for platform in level3_2.platforms:
-                                if platform.is_elevator and f"elevator_{platform.x}_{platform.initial_y}" == data['item_id']:
-                                    platform.y = data['new_y']
-                                    break
-                        elif data['level'] == "level3_3" and level3_3 is not None:
-                            for item in level3_3.itens:
-                                if item.id == data['item_id']:
-                                    item.x = data['new_x']
-                                    item.y = data['new_y']
-                                    break
-                                
                     elif message['type'] == 'event_button':
                         data = message['data']
                         level = data['level']
@@ -498,7 +459,7 @@ class Client:
                 'id': self.id
             }).encode(), (self.server_ip, self.server_port))
     
-    def send_level_update(self, level, item_id, new_x, new_y):
+    def send_level_update(self, level, item_id, new_x, new_y, holder_id=None, collected = False):
         if self.socket and self.running:
             self.socket.sendto(json.dumps({
                 'type': 'level_update',
@@ -507,7 +468,9 @@ class Client:
                     'level': level,
                     'item_id': item_id,
                     'new_x': new_x,
-                    'new_y': new_y
+                    'new_y': new_y,
+                    'holder_id': holder_id,
+                    'collected': collected
                 }
             }).encode(), (self.server_ip, self.server_port))
     
@@ -633,16 +596,12 @@ class Player:
                                 break
                         if can_move:
                             item.x -= 1
-                            client.send_level_update(self.level, item.id, item.x, item.y)
+                            client.send_level_update(self.level, item.id, item.x, item.y, None, False)
                         else:
                             self.x = previous_x
                         break
                 for platform in platforms:
                     if collision_detect(self, platform):
-                        self.x = previous_x
-                        break
-                for item in itens:
-                    if item.id == "caixa2" and collision_detect(self, item):
                         self.x = previous_x
                         break
                 for player in players_online:
@@ -675,16 +634,12 @@ class Player:
                                 break
                         if can_move:
                             item.x += 1
-                            client.send_level_update(self.level, item.id, item.x, item.y)
+                            client.send_level_update(self.level, item.id, item.x, item.y, None, False)
                         else:
                             self.x = previous_x
                         break
                 for platform in platforms:
                     if collision_detect(self, platform):
-                        self.x = previous_x
-                        break
-                for item in itens:
-                    if item.id == "caixa2" and collision_detect(self, item):
                         self.x = previous_x
                         break
                 for player in players_online:
@@ -934,6 +889,7 @@ class Item:
         self.yPyxel = yPyxel
         self.id = id
         self.collected = False
+        self.holder_id = None
         # Atributos para animação do choque
         self.facing_up = True
         self.animation_timer = 0
@@ -955,10 +911,10 @@ class Item:
         previous_y = self.y
 
         # Atualiza a chave se coletada
-        if self.id == "key" and self.collected:
+        if self.id == "key" and self.collected and self.holder_id == player.id:
             self.x = player.x + PLAYER_SPRITE_WIDTH // 2 - self.width // 2
             self.y = player.y - self.height - 5
-            client.send_level_update(player.level, self.id, self.x, self.y)
+            client.send_level_update(player.level, self.id, self.x, self.y, self.holder_id, self.collected)
 
         #Aplica gravidade para caixas
         if self.id and self.id.startswith("caixa") and not self.collected:
@@ -1092,8 +1048,7 @@ class Item:
             else:
                 blt(screen_x, screen_y, 0, 0, 64, self.width, self.height, 1)
         elif self.id == "key":
-            if not self.collected:
-                blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
+            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
         elif self.id == "door":
             blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
         elif self.id and self.id.startswith("caixa"):  # Check if self.id is not None
@@ -1183,6 +1138,8 @@ class Level1_1:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -1192,6 +1149,8 @@ class Level1_1:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level1_1")
                         break
 
@@ -1252,6 +1211,8 @@ class Level1_2:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -1261,6 +1222,8 @@ class Level1_2:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 150, 53
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level1_2")
                         break
 
@@ -1395,6 +1358,8 @@ class Level1_3:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -1405,6 +1370,8 @@ class Level1_3:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 166, 0
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level1_3")
                         break
 
@@ -1520,6 +1487,8 @@ class Level2_1:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -1529,6 +1498,8 @@ class Level2_1:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level2_1")
                         break
 
@@ -1669,6 +1640,8 @@ class Level2_2:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -1678,8 +1651,11 @@ class Level2_2:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 440, -25
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level2_2")
                         break
+
             if item.id == "gosma" and item.check_collision(player):
                 player.respawn()
             if item.id == "chock" and item.check_collision(player):
@@ -1813,6 +1789,8 @@ class Level2_3:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -1823,6 +1801,8 @@ class Level2_3:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 117, 29
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level2_3")
                         break
             if item.id == "gosma" and item.check_collision(player):
@@ -1988,6 +1968,8 @@ class Level3_1:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -1997,6 +1979,8 @@ class Level3_1:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 440, -25
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level3_1")
                         break
             if item.id == "chock" and item.check_collision(player):
@@ -2059,7 +2043,7 @@ class Level3_2:
         self.itens = [
 
             #flor vermelha
-            Item(160, 62, 5, 4, 90, 52), Item(250, 14, 5, 4, 90, 52), 
+            Item(160, 60, 5, 4, 90, 52), Item(250, 14, 5, 4, 90, 52), 
             
             #flor amarela
             Item(228, 14, 5, 4, 98, 52), 
@@ -2084,6 +2068,8 @@ class Level3_2:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -2093,6 +2079,8 @@ class Level3_2:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 440, -25
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level3_2")
                         break
 
@@ -2187,6 +2175,8 @@ class Level3_3:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
                 item.collected = True
+                item.holder_id = player.id
+                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
             if item.id == "door" and item.check_collision(player):
                 for other_item in self.itens:
                     if other_item.id == "key" and other_item.collected:
@@ -2197,6 +2187,8 @@ class Level3_3:
                         player.x, player.y = WIDTH // 2, HEIGHT // 2
                         other_item.collected = False
                         other_item.x, other_item.y = 166, 0
+                        other_item.holder_id = None
+                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
                         client.send_event_door("level3_3")
                         break
 
