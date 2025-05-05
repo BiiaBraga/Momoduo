@@ -44,6 +44,8 @@ class GameState:
 
         self.semaphore_color = 1
 
+        self.esta_creditos = False
+
         self.option_menu = 1
         self.x_seta1 = 46
         self.y_seta1 = 75
@@ -181,31 +183,6 @@ class Client:
                                 if item.id == button_id:
                                     item.is_active = is_active
                                     break
-                                
-                    elif message['type'] == 'event_door':
-                        data = message['data']
-                        level = data['level']
-                        
-                        # Transição para o próximo nível com base no nível atual
-                        if level == "level1_1":
-                            game_state.esta_level1_1 = False
-                            game_state.esta_levels_hello = True
-                            game_state.option_level_hello = 2  # Vai para o nível 1_2
-                            player.x, player.y = WIDTH // 2, HEIGHT // 2
-                            player.level = "level1_2"
-                        elif level == "level1_2":
-                            game_state.esta_level1_2 = False
-                            game_state.esta_levels_hello = True
-                            game_state.option_level_hello = 3  # Vai para o nível 1_3
-                            player.x, player.y = WIDTH // 2, HEIGHT // 2
-                            player.level = "level1_3"
-                        elif level == "level1_3":
-                            game_state.esta_level1_3 = False
-                            game_state.esta_levels_hello = True
-                            game_state.level_hello_achivied = True
-                            game_state.option_level_hello = 4  # Volta para o menu ou outro estado
-                            player.x, player.y = WIDTH // 2, HEIGHT // 2
-                            player.level = None
                         
                         elif level == "level2_1" and player.level == "level2_1":
                             game_state.esta_level2_1 = False
@@ -239,12 +216,102 @@ class Client:
                             player.x, player.y = WIDTH // 2, HEIGHT // 2
                             player.level = "level3_3"
                         elif level == "level3_3" and player.level == "level3_3":
-                            game_state.esta_level3_3 = False
-                            game_state.esta_levels_pushjump = True
-                            game_state.level_pushjump_achivied = True
-                            game_state.option_level_pushjump = 4
-                            player.x, player.y = WIDTH // 2, HEIGHT // 2
-                            player.level = None
+                            for item in level3_3.interactive_itens:
+                                if item.id == button_id:
+                                    item.is_active = is_active
+                                    break
+
+                    elif message['type'] == 'event_exit':
+                        id = message['id']
+                        level = message['data']['level']
+                        if id == self.id:
+                            self.player.has_exited = True
+                        else:
+                            for player in players_online:
+                                if player.id == id:
+                                    player.has_exited = True
+                                    break
+                    
+                    elif message['type'] == 'level_transition':
+                        data = message['data']
+                        level = data['level']
+
+                        # Verifica se o jogador local saiu do nível
+                        if self.player.has_exited:
+                            # Resetar estados dos jogadores
+                            self.player.has_exited = False
+                            for online_player in players_online:
+                                online_player.has_exited = False
+                            # Transição para o próximo nível
+                            if level == "level1_1":
+                                game_state.esta_level1_1 = False
+                                game_state.esta_levels_hello = True
+                                game_state.option_level_hello = 2
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                                player.respawn_y = 50
+                                player.level = "level1_2"
+                            elif level == "level1_2":
+                                game_state.esta_level1_2 = False
+                                game_state.esta_levels_hello = True
+                                game_state.option_level_hello = 3
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                                player.respawn_y = 50
+                                player.level = "level1_3"
+                            elif level == "level1_3":
+                                game_state.esta_level1_3 = False
+                                game_state.esta_levels_hello = True
+                                game_state.level_hello_achivied = True
+                                game_state.option_level_hello = 4
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.level = None
+                            elif level == "level2_1":
+                                game_state.esta_level2_1 = False
+                                game_state.esta_levels_stopmove = True
+                                game_state.option_level_stopmove = 2
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                                player.respawn_y = 50
+                                player.level = "level2_2"
+                            elif level == "level2_2":
+                                game_state.esta_level2_2 = False
+                                game_state.esta_levels_stopmove = True
+                                game_state.option_level_stopmove = 3
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                                player.respawn_y = 50
+                                player.level = "level2_3"
+                            elif level == "level2_3":
+                                game_state.esta_level2_3 = False
+                                game_state.esta_levels_stopmove = True
+                                game_state.level_stopmove_achivied = True
+                                game_state.option_level_stopmove = 4
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.level = None
+                            elif level == "level3_1":
+                                game_state.esta_level3_1 = False
+                                game_state.esta_levels_pushjump = True
+                                game_state.option_level_pushjump = 2
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                                player.respawn_y = 50
+                                player.level = "level3_2"
+                            elif level == "level3_2":
+                                game_state.esta_level3_2 = False
+                                game_state.esta_levels_pushjump = True
+                                game_state.option_level_pushjump = 3
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.respawn_x = 0 + (player.id * 13 if player.id is not None else 0)
+                                player.respawn_y = 50
+                                player.level = "level3_3"
+                            elif level == "level3_3":
+                                game_state.esta_level3_3 = False
+                                game_state.esta_levels_pushjump = True
+                                game_state.level_pushjump_achivied = True
+                                game_state.option_level_pushjump = 4
+                                player.x, player.y = WIDTH // 2, HEIGHT // 2
+                                player.level = None
 
                     elif message['type'] == 'semaphore_update':
                         data = message['data']
@@ -262,62 +329,29 @@ class Client:
                             self.player.upward_speed = 0
                             self.player.on_floor = False
                             print(f"Jogador local {player_id} respawned at ({x}, {y})")
-                            # Reseta itens (como a chave) localmente
-                            if game_state.esta_level1_1 and level1_1:
-                                for item in level1_1.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-                            elif game_state.esta_level1_2 and level1_2:
-                                for item in level1_2.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-                            elif game_state.esta_level1_3 and level1_3:
-                                for item in level1_3.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-                            elif game_state.esta_level2_1 and level2_1:
-                                for item in level2_1.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-                            elif game_state.esta_level2_2 and level2_2:
-                                for item in level2_2.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-                            elif game_state.esta_level2_3 and level2_3:
-                                for item in level2_3.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-                            elif game_state.esta_level3_1 and level3_1:
-                                for item in level3_1.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-                            elif game_state.esta_level3_2 and level3_2:
-                                for item in level3_2.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-                            elif game_state.esta_level3_3 and level3_3:
-                                for item in level3_3.itens:
-                                    if item.id == "key":
-                                        item.collected = False
-                                        item.x = item.initial_x
-                                        item.y = item.initial_y
-
+                            # Reseta itens (como a chave) apenas se a porta não estiver aberta
+                            level_instances = {
+                                "level1_1": (game_state.esta_level1_1, level1_1),
+                                "level1_2": (game_state.esta_level1_2, level1_2),
+                                "level1_3": (game_state.esta_level1_3, level1_3),
+                                "level2_1": (game_state.esta_level2_1, level2_1),
+                                "level2_2": (game_state.esta_level2_2, level2_2),
+                                "level2_3": (game_state.esta_level2_3, level2_3),
+                                "level3_1": (game_state.esta_level3_1, level3_1),
+                                "level3_2": (game_state.esta_level3_2, level3_2),
+                                "level3_3": (game_state.esta_level3_3, level3_3)
+                            }
+                            for level_name, (is_active, level_instance) in level_instances.items():
+                                if is_active and level_instance:
+                                    door_open = any(item.id == "door" and item.is_open for item in level_instance.itens)
+                                    if not door_open:  # Só reseta a chave se a porta não estiver aberta
+                                        for item in level_instance.itens:
+                                            if item.id == "key":
+                                                item.collected = False
+                                                item.x = item.initial_x
+                                                item.y = item.initial_y
+                                                item.holder_id = None
+                                                item.consumed = False
                         else:
                             for online_player in players_online:
                                 if online_player.id == player_id:
@@ -326,63 +360,55 @@ class Client:
                                     online_player.upward_speed = 0
                                     online_player.on_floor = False
                                     print(f"Jogador online {player_id} respawned at ({x}, {y})")
-                                    # Reseta itens (como a chave) localmente
-                                    if game_state.esta_level1_1 and level1_1:
-                                        for item in level1_1.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y
-                                    elif game_state.esta_level1_2 and level1_2:
-                                        for item in level1_2.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y
-                                    elif game_state.esta_level1_3 and level1_3:
-                                        for item in level1_3.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y
-                                    elif game_state.esta_level2_1 and level2_1:
-                                        for item in level2_1.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y
-                                    elif game_state.esta_level2_2 and level2_2:
-                                        for item in level2_2.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y
-                                    elif game_state.esta_level2_3 and level2_3:
-                                        for item in level2_3.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y
-                                    elif game_state.esta_level3_1 and level3_1:
-                                        for item in level3_1.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y
-                                    elif game_state.esta_level3_2 and level3_2:
-                                        for item in level3_2.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y
-                                    elif game_state.esta_level3_3 and level3_3:
-                                        for item in level3_3.itens:
-                                            if item.id == "key":
-                                                item.collected = False
-                                                item.x = item.initial_x
-                                                item.y = item.initial_y                                 
+                                    # Reseta itens (como a chave) apenas se a porta não estiver aberta
+                                    level_instances = {
+                                        "level1_1": (game_state.esta_level1_1, level1_1),
+                                        "level1_2": (game_state.esta_level1_2, level1_2),
+                                        "level1_3": (game_state.esta_level1_3, level1_3),
+                                        "level2_1": (game_state.esta_level2_1, level2_1),
+                                        "level2_2": (game_state.esta_level2_2, level2_2),
+                                        "level2_3": (game_state.esta_level2_3, level2_3),
+                                        "level3_1": (game_state.esta_level3_1, level3_1),
+                                        "level3_2": (game_state.esta_level3_2, level3_2),
+                                        "level3_3": (game_state.esta_level3_3, level3_3)
+                                    }
+                                    for level_name, (is_active, level_instance) in level_instances.items():
+                                        if is_active and level_instance:
+                                            door_open = any(item.id == "door" and item.is_open for item in level_instance.itens)
+                                            if not door_open:  # Só reseta a chave se a porta não estiver aberta
+                                                for item in level_instance.itens:
+                                                    if item.id == "key":
+                                                        item.collected = False
+                                                        item.x = item.initial_x
+                                                        item.y = item.initial_y
+                                                        item.holder_id = None
+                                                        item.consumed = False
                                     break
                     
+                    elif message['type'] == 'event_door':
+                        data = message['data']
+                        level = data['level']
+                        key_consumed = data.get('key_consumed', False)  # Verifica se a chave foi consumida
+                        level_instance = {
+                            "level1_1": level1_1,
+                            "level1_2": level1_2,
+                            "level1_3": level1_3,
+                            "level2_1": level2_1,
+                            "level2_2": level2_2,
+                            "level2_3": level2_3,
+                            "level3_1": level3_1,
+                            "level3_2": level3_2,
+                            "level3_3": level3_3
+                        }.get(level)
+                        if level_instance:
+                            for item in level_instance.itens:
+                                if item.id == "door":
+                                    item.is_open = True
+                                elif item.id == "key" and key_consumed:
+                                    item.collected = True  # Marca como coletada
+                                    item.holder_id = None  # Remove o holder
+                                    item.consumed = True   # Nova flag para indicar que a chave foi consumida
+
                     elif message['type'] == 'elevator_update':
                         data = message['data']
                         if (data['level'] == 'level2_3' and 
@@ -508,6 +534,17 @@ class Client:
                 }
             }).encode(), (self.server_ip, self.server_port))
 
+    def send_event_exit(self, player_id, level):
+        if self.socket and self.running:
+            self.socket.sendto(json.dumps({
+                'type': 'exit',
+                'id': self.id,
+                'data': {
+                    'player_id': player_id,
+                    'level': level
+                }
+            }).encode(), (self.server_ip, self.server_port))
+
 class Player:
     def __init__(self, x: int, y: int, color: int):
         self.id = None
@@ -525,8 +562,13 @@ class Player:
         self.height = PLAYER_SPRITE_HEIGHT
 
         self.level = None  # Atributo para armazenar o nível atual
+        self.has_exited = False
 
     def update(self, platforms, itens, players_online):
+
+        if self.has_exited:
+            return  # Não atualiza se o jogador saiu do nível
+
         self.andando = False
 
         # Gravidade
@@ -555,6 +597,8 @@ class Player:
                 self.on_floor = False
             
             for player in players_online:
+                if player.has_exited:
+                    continue  # Ignora jogadores que saíram
                 if collision_detect(self, player):
                     self.on_floor = True
                     did_collide_with_floor = True
@@ -570,6 +614,14 @@ class Player:
         if btnp(KEY_UP) and self.on_floor:
             self.upward_speed = 10
 
+        # Interação com a porta aberta
+        for item in itens:
+            if item.id == "door" and item.is_open and collision_detect(self, item):
+                if btnp(KEY_UP):
+                    self.has_exited = True
+                    client.send_event_exit(self.id, self.level)
+                    break
+
         # Movimento horizontal
         if btn(KEY_LEFT):
             self.andando = True
@@ -578,6 +630,8 @@ class Player:
                 previous_x = self.x
                 self.x -= 1
                 for item in itens:
+                    if item.id == "door" and item.is_open:
+                        continue
                     if item.id and item.id.startswith("caixa") and collision_detect(self, item):  # Check if item.id is not None
                         temp_item = Item(item.x - 1, item.y, item.width, item.height, item.xPyxel, item.yPyxel, item.id)
                         can_move = True
@@ -591,6 +645,8 @@ class Player:
                                     can_move = False
                                     break
                         for online_player in players_online:
+                            if player.has_exited:
+                                continue  # Ignora jogadores que saíram
                             if collision_detect(temp_item, online_player):
                                 can_move = False
                                 break
@@ -605,6 +661,8 @@ class Player:
                         self.x = previous_x
                         break
                 for player in players_online:
+                    if player.has_exited:
+                        continue  # Ignora jogadores que saíram
                     if collision_detect(self, player):
                         self.x = previous_x
                         break
@@ -616,6 +674,8 @@ class Player:
                 previous_x = self.x
                 self.x += 1
                 for item in itens:
+                    if item.id == "door" and item.is_open:
+                        continue  # Ignora colisão com porta aberta
                     if item.id and item.id.startswith("caixa") and collision_detect(self, item):  # Check if item.id is not None
                         temp_item = Item(item.x + 1, item.y, item.width, item.height, item.xPyxel, item.yPyxel, item.id)
                         can_move = True
@@ -629,6 +689,8 @@ class Player:
                                     can_move = False
                                     break
                         for online_player in players_online:
+                            if player.has_exited:
+                                continue  # Ignora jogadores que saíram
                             if collision_detect(temp_item, online_player):
                                 can_move = False
                                 break
@@ -643,10 +705,13 @@ class Player:
                         self.x = previous_x
                         break
                 for player in players_online:
+                    if player.has_exited:
+                                continue  # Ignora jogadores que saíram
                     if collision_detect(self, player):
                         self.x = previous_x
                         break
-
+        
+        # Movimento vertical (pulo)
         if self.upward_speed > 0:
             for _ in range(self.upward_speed):
                 previous_y = self.y
@@ -656,6 +721,9 @@ class Player:
                         self.y = previous_y
                         break
                 for item in itens:
+                    # Ignora colisão com a porta aberta
+                    if item.id == "door" and item.is_open:
+                        continue
                     if item.id and item.id.startswith("caixa") and collision_detect(self, item):  # Check if item.id is not None
                         self.y = previous_y
                         self.upward_speed = 0
@@ -667,62 +735,35 @@ class Player:
         self.y = self.respawn_y
         self.upward_speed = 0
         self.on_floor = False
-        if game_state.esta_level1_1 and level1_1:
-            for item in level1_1.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
-        elif game_state.esta_level1_2 and level1_2:
-            for item in level1_2.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
-        elif game_state.esta_level1_3 and level1_3:
-            for item in level1_3.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
-        elif game_state.esta_level2_1 and level2_1:
-            for item in level2_1.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
-        elif game_state.esta_level2_2 and level2_2:
-            for item in level2_2.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
-        elif game_state.esta_level2_3 and level2_3:
-            for item in level2_3.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
-        elif game_state.esta_level3_1 and level3_1:
-            for item in level3_1.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
-        elif game_state.esta_level3_2 and level3_2:
-            for item in level3_2.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
-        elif game_state.esta_level3_3 and level3_3:
-            for item in level3_3.itens:
-                if item.id == "key":
-                    item.collected = False
-                    item.x = item.initial_x
-                    item.y = item.initial_y
+        level_instances = [
+            (game_state.esta_level1_1, level1_1),
+            (game_state.esta_level1_2, level1_2),
+            (game_state.esta_level1_3, level1_3),
+            (game_state.esta_level2_1, level2_1),
+            (game_state.esta_level2_2, level2_2),
+            (game_state.esta_level2_3, level2_3),
+            (game_state.esta_level3_1, level3_1),
+            (game_state.esta_level3_2, level3_2),
+            (game_state.esta_level3_3, level3_3)
+        ]
+        for is_active, level_instance in level_instances:
+            if is_active and level_instance:
+                door_open = any(item.id == "door" and item.is_open for item in level_instance.itens)
+                if not door_open:  # Só reseta a chave se a porta não estiver aberta
+                    for item in level_instance.itens:
+                        if item.id == "key":
+                            item.collected = False
+                            item.x = item.initial_x
+                            item.y = item.initial_y
+                            item.holder_id = None
+                            item.consumed = False
+                break
 
     def draw(self, camera):
+
+        if self.has_exited:
+            return  # Não desenha o jogador se ele saiu do nível
+
         screen_x = self.x - camera.x
         screen_y = self.y - camera.y
         sprite_width = PLAYER_SPRITE_WIDTH if not self.facing_right else -PLAYER_SPRITE_WIDTH  # Flip sprite if facing right
@@ -764,6 +805,7 @@ class PlayerOnline:
         self.width = PLAYER_SPRITE_WIDTH
         self.height = PLAYER_SPRITE_HEIGHT
         self.level = None
+        self.has_exited = False
 
     def update(self, x, y, color, andando, level, facing_right):
         self.x = x
@@ -834,6 +876,10 @@ class PlayerOnline:
                     item.y = item.initial_y
 
     def draw(self, camera):
+
+        if self.has_exited:
+            return
+        
         screen_x = self.x - camera.x
         screen_y = self.y - camera.y
         sprite_width = PLAYER_SPRITE_WIDTH if not self.facing_right else -PLAYER_SPRITE_WIDTH  # Flip sprite if facing right
@@ -890,6 +936,8 @@ class Item:
         self.id = id
         self.collected = False
         self.holder_id = None
+        self.is_open = False  # Novo atributo para portas
+        self.consumed = False
         # Atributos para animação do choque
         self.facing_up = True
         self.animation_timer = 0
@@ -1040,26 +1088,36 @@ class Item:
         return True
 
     def draw(self, camera):
+        if self.consumed:
+            return  # Não desenha itens consumidos
         screen_x = self.x - camera.x
         screen_y = self.y - camera.y
-        if self.id == "chock":
-            if self.facing_up:
-                blt(screen_x, screen_y, 0, 11, 64, self.width, self.height, 1)
-            else:
-                blt(screen_x, screen_y, 0, 0, 64, self.width, self.height, 1)
-        elif self.id == "key":
-            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
-        elif self.id == "door":
-            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 1)
-        elif self.id and self.id.startswith("caixa"):  # Check if self.id is not None
-            blt(screen_x, screen_y, 0, 72, 24, self.width, self.height, 1)
-        elif self.id == "gosma":
-            # Inverte o sprite horizontalmente se estiver movendo para a direita
-            sprite_width = self.width if not self.moving_right else -self.width
-            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, sprite_width, self.height, 1)
+        screen_x = self.x - camera.x
+        screen_y = self.y - camera.y
+        # Não desenha a chave se a porta estiver aberta
+        door_open = any(item.is_open for item in (level1_1.itens if game_state.esta_level1_1 else
+                                                 level1_2.itens if game_state.esta_level1_2 else
+                                                 level1_3.itens if game_state.esta_level1_3 else
+                                                 level2_1.itens if game_state.esta_level2_1 else
+                                                 level2_2.itens if game_state.esta_level2_2 else
+                                                 level2_3.itens if game_state.esta_level2_3 else
+                                                 level3_1.itens if game_state.esta_level3_1 else
+                                                 level3_2.itens if game_state.esta_level3_2 else
+                                                 level3_3.itens if game_state.esta_level3_3 else []) if item.id == "door")
+        if self.id == "key" and not self.collected and not door_open:
+            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 4)
+        elif self.id == "key" and self.collected and self.holder_id is not None and not door_open:
+            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 4)
+        elif self.id == "door" and not self.is_open:
+            blt(screen_x, screen_y, 0, 72, 40, 16, 14, 9)
+        elif self.id == "door" and self.is_open:
+            blt(screen_x, screen_y, 0, 48, 40, 16, 14, 9)
+        elif self.id and self.id.startswith("caixa"):
+            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 4)
+        elif self.id == "chock":
+            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 4)
         else:
-            # Handle items without an ID (e.g., flowers) or other cases
-            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 7)  # Use colorkey 7 for flowers
+            blt(screen_x, screen_y, 0, self.xPyxel, self.yPyxel, self.width, self.height, 4)
 
 class InteractiveItem:
     def __init__(self, x: int, y: int, width: int, height: int, xPyxel: int, yPyxel: int, id: str):
@@ -1137,20 +1195,16 @@ class Level1_1:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level1_1 = False
-                        game_state.esta_levels_hello = True
-                        game_state.option_level_hello = 2
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 117, 29
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level1_1")
                         break
 
@@ -1212,20 +1266,15 @@ class Level1_2:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level1_2 = False
-                        game_state.esta_levels_hello = True
-                        game_state.option_level_hello = 3
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 150, 53
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level1_2")
                         break
 
@@ -1364,21 +1413,15 @@ class Level1_3:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level1_3 = False
-                        game_state.level_hello_achivied = True
-                        game_state.esta_levels_hello = True
-                        game_state.option_level_hello = 4
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 166, 0
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level1_3")
                         break
 
@@ -1493,23 +1536,18 @@ class Level2_1:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level2_1 = False
-                        game_state.esta_levels_stopmove = True
-                        game_state.option_level_stopmove = 2
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 117, 29
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level2_1")
                         break
-
+            
         # Verifica se qualquer jogador está andando no vermelho
         trigger_respawn = False
         
@@ -1646,20 +1684,15 @@ class Level2_2:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level2_2 = False
-                        game_state.esta_levels_stopmove = True
-                        game_state.option_level_stopmove = 3
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 440, -25
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level2_2")
                         break
 
@@ -1795,23 +1828,18 @@ class Level2_3:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level2_3 = False
-                        game_state.esta_levels_stopmove = True
-                        game_state.level_stopmove_achivied = True
-                        game_state.option_level_stopmove = 4
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 117, 29
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level2_3")
                         break
+            
             if item.id == "gosma" and item.check_collision(player):
                 player.respawn()
             if item.id == "fire" and item.is_visible and item.check_collision(player):
@@ -1974,22 +2002,18 @@ class Level3_1:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level3_1 = False
-                        game_state.esta_levels_pushjump = True
-                        game_state.option_level_pushjump = 2
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 440, -25
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level3_1")
                         break
+        
             if item.id == "chock" and item.check_collision(player):
                 player.respawn()
 
@@ -2074,23 +2098,18 @@ class Level3_2:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level3_2 = False
-                        game_state.esta_levels_pushjump = True
-                        game_state.option_level_pushjump = 3
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 440, -25
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level3_2")
                         break
-
+           
     def draw(self):
         for platform in self.platforms:
             platform.draw(self.camera)
@@ -2181,24 +2200,18 @@ class Level3_3:
         for item in self.itens:
             item.update(player)
             if item.id == "key" and not item.collected and item.check_collision(player):
-                item.collected = True
-                item.holder_id = player.id
-                client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
-            if item.id == "door" and item.check_collision(player):
+                if player.id is not None:
+                    item.collected = True
+                    item.holder_id = player.id
+                    client.send_level_update(player.level, "key_picked", item.x, item.y, item.holder_id, item.collected)
+            if item.id == "door" and not item.is_open and item.check_collision(player):
                 for other_item in self.itens:
-                    if other_item.id == "key" and other_item.collected:
-                        game_state.esta_level3_3 = False
-                        game_state.level_pushjump_achivied = True
-                        game_state.esta_levels_pushjump = True
-                        game_state.option_level_pushjump = 4
-                        player.x, player.y = WIDTH // 2, HEIGHT // 2
-                        other_item.collected = False
-                        other_item.x, other_item.y = 166, 0
-                        other_item.holder_id = None
-                        client.send_level_update(player.level, "key_dropped", other_item.x, other_item.y, None, False)
+                    if other_item.id == "key" and other_item.collected and other_item.holder_id == player.id:
+                        item.is_open = True
+                        other_item.consumed = True  # Marca a chave como consumida
                         client.send_event_door("level3_3")
                         break
-
+            
         # Atualiza estado dos botões
         for item in self.interactive_itens:
             if isinstance(item, InteractiveItem):
@@ -2435,6 +2448,23 @@ def update():
         if game_state.pode_selecionar and btnp(KEY_B):
             load("Intro.pyxres")
             game_state.esta_levels = False
+            game_state.esta_menu = True
+            game_state.option_menu = 1
+            game_state.pode_selecionar = False
+            game_state.x_seta1 = 46
+            player.level = None
+
+        if game_state.level_hello_achivied and game_state.level_stopmove_achivied and game_state.level_pushjump_achivied and game_state.pode_selecionar and btnp(KEY_C):
+            game_state.esta_levels = False
+            game_state.esta_creditos = True
+            load("creditos.pyxres")
+        
+    if game_state.esta_creditos:
+        if not btn(KEY_B):
+            game_state.pode_selecionar = True
+        if game_state.pode_selecionar and btnp(KEY_B):
+            load("Intro.pyxres")
+            game_state.esta_creditos = False
             game_state.esta_menu = True
             game_state.option_menu = 1
             game_state.pode_selecionar = False
@@ -2796,6 +2826,22 @@ def draw():
         if game_state.level_pushjump_achivied:
             blt(93, 62, game_state.option_level, 50, 134, 21, 17, 1)
 
+        if game_state.level_hello_achivied and game_state.level_stopmove_achivied and game_state.level_pushjump_achivied:
+            text(10, 90, "Aperte C para ir para os creditos!", 1)
+
+    if game_state.esta_creditos:
+        cls(1)  # Fundo preto
+        # Centraliza os textos (considerando aproximadamente 4 pixels por caractere)
+        text(60, 2, "Creditos", 7)  # Título (cor branca)
+        text(45, 10, "Desenvolvedores", 7)
+        text(35, 20, "Beatriz Braga Silva", 7)
+        text(20, 30, "Lucas Silva Cardoso dos Santos", 7)
+        text(60, 50, "Musica", 7)
+        text(20, 60, "Faded in my last song - NCT U", 7)
+        text(55, 80, "Inspiracao", 7)
+        text(55, 90, "Pico Park", 7)
+        text(2, 110, "Pressione B para voltar", 7)  # Instrução no canto superior esquerdo
+
     if game_state.esta_level1_1:
         level1_1.draw()
         player.draw(level1_1.camera)
@@ -2896,5 +2942,5 @@ def draw():
         text(2, 2, "3/3", 1)
 
 load("Intro.pyxres")
-#sounds = PyxelSounds()
+sounds = PyxelSounds()
 run(update, draw)

@@ -23,6 +23,7 @@ class Server:
         self.fire_interval = 60  # 2 segundos a 30 FPS (30 frames/seg * 2 seg = 60 frames)
 
         self.player_positions = {}  # Armazena posições dos jogadores: {id: {'x': x, 'y': y, 'level': level}}\
+        self.exited_players = {}
 
         # Lista de elevadores para todos os níveis
         self.elevators = [
@@ -129,19 +130,28 @@ class Server:
                             print(f"Jogador não encontrado: {addr}")
                     
                     elif message['type'] == 'level_update':
-                        for jogador in self.jogadores:
-                            if jogador[0] == message['id']:
-                                # Envia a atualização de nível para todos os jogadores
-                                for _, addr_jogador, _ in self.jogadores:
-                                    if addr_jogador != addr:
-                                        self.socket.sendto(json.dumps({
-                                            'type': 'level_update',
-                                            'id': jogador[0],
-                                            'data': message['data']
-                                        }).encode(), addr_jogador)
-                                break
-                        else:
-                            print(f"Jogador não encontrado: {addr}")
+                        try:
+                            if not all(key in message for key in ['id', 'data']):
+                                print(f"Mensagem level_update inválida: {message}")
+                                continue
+                            if not all(key in message['data'] for key in ['level', 'item_id', 'new_x', 'new_y', 'collected']):
+                                print(f"Dados de level_update incompletos: {message['data']}")
+                                continue
+                            for jogador in self.jogadores:
+                                if jogador[0] == message['id']:
+                                    # Envia a atualização de nível para todos os jogadores
+                                    for _, addr_jogador, _ in self.jogadores:
+                                        if addr_jogador != addr:
+                                            self.socket.sendto(json.dumps({
+                                                'type': 'level_update',
+                                                'id': jogador[0],
+                                                'data': message['data']
+                                            }).encode(), addr_jogador)
+                                    break
+                            else:
+                                print(f"Jogador não encontrado: {addr}")
+                        except Exception as e:
+                            print(f"Erro ao processar level_update: {e}")
                     
                     elif message['type'] == 'event_button':
                         for jogador in self.jogadores:
@@ -159,11 +169,15 @@ class Server:
                             print(f"Jogador não encontrado: {addr}")
                     
                     elif message['type'] == 'event_door':
+                        level = message['data']['level']
                         for _, addr_jogador, _ in self.jogadores:
                             self.socket.sendto(json.dumps({
                                 'type': 'event_door',
                                 'id': message['id'],
-                                'data': message['data']
+                                'data': {
+                                    'level': level,
+                                    'key_consumed': True  # Adiciona flag para indicar que a chave foi consumida
+                                }
                             }).encode(), addr_jogador)
                         print(f"Evento de porta recebido de {addr} para nível {message['data']['level']}")
 
@@ -181,7 +195,36 @@ class Server:
                                 break
                         else:
                             print(f"Jogador não encontrado: {addr}")
-
+                    
+                    elif message['type'] == 'exit':
+                        player_id = message['id']
+                        level = message['data']['level']
+                        if level not in self.exited_players:
+                            self.exited_players[level] = []
+                        if player_id not in self.exited_players[level]:
+                            self.exited_players[level].append(player_id)
+                            # Envia evento de saída para todos os jogadores
+                            for _, addr_jogador, _ in self.jogadores:
+                                self.socket.sendto(json.dumps({
+                                    'type': 'event_exit',
+                                    'id': player_id,
+                                    'data': {'level': level}
+                                }).encode(), addr_jogador)
+                            print(f"Jogador {player_id} saiu do nível {level}")
+                        # Verifica se todos os jogadores no nível saíram
+                        players_in_level = [j for j, _, _ in self.jogadores if self.player_positions.get(j, {}).get('level') == level]
+                        if len(self.exited_players.get(level, [])) >= len(players_in_level) and players_in_level:
+                            # Confirma que todos os jogadores enviaram 'exit'
+                            all_exited = all(player_id in self.exited_players.get(level, []) for player_id in players_in_level)
+                            if all_exited:
+                                for _, addr_jogador, _ in self.jogadores:
+                                    self.socket.sendto(json.dumps({
+                                        'type': 'level_transition',
+                                        'data': {'level': level}
+                                    }).encode(), addr_jogador)
+                                self.exited_players[level] = []
+                                print(f"Todos os jogadores saíram do nível {level}, avançando para o próximo nível")
+                
                 # Atualiza o semáforo e o fogo e o elevador
                 current_time = time.time()
                 if current_time - self.last_update >= 1/30:  # Atualiza a cada ~33ms (30 FPS)
@@ -276,11 +319,12 @@ class Server:
 
         self.socket = None
         self.jogadores = []
+        self.exited_players = {}
         print("Servidor parado.")
 
 if __name__ == "__main__":
-    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão  192.168.1.13): ")
-    host = host if host else '192.168.1.13'
+    host = input("Digite o endereço IP do servidor (ou pressione Enter para usar o padrão  192.168.1.15): ")
+    host = host if host else '192.168.1.15'
 
     port = input("Digite a porta do servidor (ou pressione Enter para usar o padrão 12345): ")
     port = int(port) if port else 12345
